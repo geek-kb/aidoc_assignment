@@ -2,3 +2,12 @@
 .terragrunt-cache/
 **/.terragrunt-cache/
 .terraform.lock.hcl
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+crash.log
+override.tf
+override.tf.json
+terraform.tfvars
+terraform.tfvars.json
