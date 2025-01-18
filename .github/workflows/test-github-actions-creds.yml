@@ -2,7 +2,7 @@ name: Test GitHub Actions Credentials
 
 on:
   workflow_dispatch:
-    
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -19,6 +19,19 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::912466608750:role/aidoc-devops2-ex-github-oidc-auth
           aws-region: eu-north-1
+
+      - name: Assume `github-actions-workflows` Role
+        run: |
+          CREDENTIALS=$(aws sts assume-role \
+            --role-arn "arn:aws:iam::912466608750:role/aidoc-devops2-ex-github-actions-workflows" \
+            --role-session-name "GitHubActionsSession")
+      
+          export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')
+          export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')
+          export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')
+          
+        - name: Verify Assumed Role
+          run: aws sts get-caller-identity
 
       - name: Test AWS CLI
         run: aws sts get-caller-identity
