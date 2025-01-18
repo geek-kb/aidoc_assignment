@@ -30,7 +30,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/aidoc-devops2-ex-github-oidc-auth
-          aws-region: eu-north-1
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Verify OIDC Auth Role
         run: aws sts get-caller-identity
