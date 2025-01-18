@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy Order Retrieval
+    name: Test Workflow
     runs-on: ubuntu-latest
 
     env:
@@ -25,11 +25,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v2
+        - name: Configure AWS Credentials for OIDC Auth Role
+        uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/aidoc-devops2-ex-github-actions
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::912466608750:role/aidoc-devops2-ex-github-oidc-auth
+          aws-region: eu-north-1
+
+      - name: Verify OIDC Auth Role
+        run: aws sts get-caller-identity
+
+      - name: Assume `github-actions-workflows` Role Securely
+        id: assume-role
+        run: |
+          CREDENTIALS=$(aws sts assume-role \
+            --role-arn "arn:aws:iam::912466608750:role/aidoc-devops2-ex-github-actions-workflows" \
+            --role-session-name "GitHubActionsSession")
+
+          # Masking Secrets in Logs
+          echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')"
+          echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')"
+          echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')"
+
+          # Export Variables Securely
+          echo "AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
+
+      - name: Verify `github-actions-workflows` Role
+        run: aws sts get-caller-identity
 
       - name: Test
         run: |
