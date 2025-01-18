@@ -40,7 +40,7 @@ inputs = {
   ]
 
   tags = {
-    Environment = "dev"
+    Environment = local.environment
     Project     = "ordering-system"
   }
 }

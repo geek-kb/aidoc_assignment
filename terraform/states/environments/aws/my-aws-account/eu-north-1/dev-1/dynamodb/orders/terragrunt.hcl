@@ -24,6 +24,8 @@ terraform {
 
 inputs = {
   table_name   = "${local.parent_folder_name}"
+  stream_enabled   = true
+  stream_view_type = "NEW_IMAGE"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "partitionKey"
   range_key    = "sortKey"

@@ -23,6 +23,12 @@ locals {
   function_directory = "${get_repo_root()}/terraform/states/environments/aws/${path_relative_to_include()}"
   function_source_code_path = "${local.function_directory}/lambda_source_code"
   function_source_zip_path     = "${local.function_directory}/${local.function_zip_filename}"
+
+  triggering_bucket_name = "ordering-system"
+  triggering_bucket_directory_name = "orders"
+  sqs_queue_name = "order-processor"
+
+  assignment_prefix = "aidoc-devops2-ex"
 }
 
 terraform {
@@ -30,35 +36,35 @@ terraform {
 }
 
 dependency "iam_role" {
-  config_path = "../../iam-role/verification_lambda_execution/terragrunt.hcl"
+  config_path = "../../iam-role/${split("_", "${local.function_name}")[1]}_lambda_execution"
 
   mock_outputs = {
-    arn = "arn:aws:iam::${local.account_id}:role/verification_lambda_execution"
+    arn = "arn:aws:iam::${local.account_id}:role/${split("_", "${local.function_name}")[1]}_lambda_execution"
   }
 }
 
 dependency "s3_trigger_bucket" {
-  config_path = "../../s3/ordering-system/terragrunt.hcl"
+  config_path = "../../s3/${local.triggering_bucket_name}"
 
   mock_outputs = {
-    bucket_name = "ordering-system"
-    bucket_arn = "arn:aws:s3:::ordering-system"
+    bucket_name = "${local.triggering_bucket_name}"
+    bucket_arn = "arn:aws:s3:::${local.triggering_bucket_name}"
   }
 }
 
 dependency "sqs_queue" {
-  config_path = "../../sqs/order-processor/terragrunt.hcl"
+  config_path = "../../sqs/${local.sqs_queue_name}"
 
   mock_outputs = {
-    queue_url = "https://sqs.${local.region}.amazonaws.com/${local.account_id}/order-processor"
+    queue_url = "https://sqs.${local.region}.amazonaws.com/${local.account_id}/${local.sqs_queue_name}"
   }
 }
 
 dependency "dynamodb_table" {
-  config_path = "../../dynamodb/orders/terragrunt.hcl"
+  config_path = "../../dynamodb/${local.triggering_bucket_directory_name}"
 
   mock_outputs = {
-    table_name = "orders"
+    table_name = "${local.triggering_bucket_directory_name}"
   }
 }
 
@@ -79,7 +85,7 @@ inputs = {
 
   enable_s3_trigger    = true
   s3_bucket_name       = "${dependency.s3_trigger_bucket.outputs.bucket_name}"
-  s3_trigger_directory = "orders/"
+  s3_trigger_directory = "${local.triggering_bucket_directory_name}/"
 
   enable_function_url = false
 

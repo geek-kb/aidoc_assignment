@@ -37,11 +37,27 @@ inputs = {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-actions-workflows",
           "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-terraform"
         ]
       },
       "Action": "sts:AssumeRole"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::${local.account_id}:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": [
+            "repo:geek-kb/aidoc_assignment:*"
+          ]
+        },
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        }
+      }
     }
   ]
 }
@@ -85,7 +101,7 @@ EOF
             "s3:PutBucketAcl",
             "s3:PutBucketLogging"
           ],
-          "Resource" : "arn:aws:s3:::terraform-state-bucket"
+          "Resource" : "arn:aws:s3:::${local.assignment_prefix}-terraform-state"
         },
         {
           "Effect" : "Allow",
@@ -93,7 +109,7 @@ EOF
             "s3:GetObject",
             "s3:PutObject"
           ],
-          "Resource" : "arn:aws:s3:::terraform-state-bucket/*"
+          "Resource" : "arn:aws:s3:::${local.assignment_prefix}-terraform-state/*"
         }
       ]
     }

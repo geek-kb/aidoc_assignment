@@ -16,6 +16,8 @@ locals {
   parent_folder_path  = split("/", path_relative_to_include())
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
+
+  assignment_prefix = "aidoc-devops2-ex"
 }
 
 terraform {
@@ -34,16 +36,24 @@ inputs = {
       {
         Effect = "Allow",
         Principal = {
-          AWS = "arn:aws:iam::${get_aws_account_id()}:root"
+          AWS = [
+            "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-terraform",
+            "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-${local.assignment_prefix}-retrieval_lambda_execution"
+          ]
         },
-        Action   = "kms:*",
-        Resource = "*"
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:DescribeKey"
+        ],
+        Resource = "arn:aws:kms:${local.region}:${local.account_id}:key/${local.parent_folder_name}-key"
       }
     ]
   })
 
   tags = {
-    Environment = "dev"
+    Environment = local.environment_name
     Purpose     = "Data Encryption"
   }
 }

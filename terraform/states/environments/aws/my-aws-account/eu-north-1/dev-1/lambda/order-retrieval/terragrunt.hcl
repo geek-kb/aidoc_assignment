@@ -67,7 +67,7 @@ inputs = {
   memory_size     = 128
   timeout         = 60
   containerization = true
-  image_uri       = "${local.account_id}.dkr.ecr.${local.region}.amazonaws.com/${local.parent_folder_name}:latest"
+  image_uri       = "${dependency.ecr_repository.outputs.repository_url}:latest"
 
   enable_function_url = true
   function_url_cors = {
@@ -80,6 +80,6 @@ inputs = {
 
   lambda_environment = {
     DYNAMODB_TABLE_NAME = "orders"
-    SQS_QUEUE_URL       = "https://sqs.${local.region}.amazonaws.com/${local.account_id}/order-queue"
+    SQS_QUEUE_URL       = dependency.sqs_queue.outputs.queue_url
   }
 }
