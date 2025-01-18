@@ -58,8 +58,8 @@ jobs:
       - name: Test
         run: |
           echo "$PWD"
-          apt update
-          apt install -y jq
-          apt install -y tree
+          sudo apt update
+          sudo apt install -y jq
+          sudo apt install -y tree
           tree -f .
           echo "AWS_ACCOUNT_ID: $ACCOUNT_ID"
