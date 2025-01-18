@@ -1,0 +1,41 @@
+name: Test Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Order Retrieval
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: "eu-west-1"
+      ACCOUNT_ID: secrets.AWS_ACCOUNT_ID
+      ECR_REPO: "order-retrieval"
+      LAMBDA_FUNCTION_NAME: "order-retrieval"
+      IMAGE_TAG: "latest"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/aidoc-devops2-ex-github-actions
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Test
+        run: |
+          echo "$PWD"
+          apt update
+          apt install -y jq
+          apt install -y tree
+          tree -f .
+          echo "AWS_ACCOUNT_ID: $ACCOUNT_ID"
