@@ -29,7 +29,7 @@ jobs:
       - name: Configure AWS Credentials for OIDC Auth Role
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/aidoc-devops2-ex-github-oidc-auth
+          role-to-assume: arn:aws:iam::912466608750:role/aidoc-devops2-ex-github-oidc-auth
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Verify OIDC Auth Role
@@ -39,7 +39,7 @@ jobs:
         id: assume-role
         run: |
           CREDENTIALS=$(aws sts assume-role \
-            --role-arn "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/aidoc-devops2-ex-github-actions-workflows" \
+            --role-arn "arn:aws:iam::912466608750:role/aidoc-devops2-ex-github-actions-workflows" \
             --role-session-name "GitHubActionsSession")
 
           # Masking Secrets in Logs
