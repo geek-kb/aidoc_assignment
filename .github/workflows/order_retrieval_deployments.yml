@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "lambda/order-retrieval/**"
+      - "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/lambda_source_code**"
 
 permissions:
   id-token: write
