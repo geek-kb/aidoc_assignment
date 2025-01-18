@@ -23,13 +23,19 @@ jobs:
       - name: Verify OIDC Auth Role
         run: aws sts get-caller-identity
 
-      - name: Assume `github-actions-workflows` Role
+      - name: Assume `github-actions-workflows` Role Securely
         id: assume-role
         run: |
           CREDENTIALS=$(aws sts assume-role \
             --role-arn "arn:aws:iam::912466608750:role/aidoc-devops2-ex-github-actions-workflows" \
             --role-session-name "GitHubActionsSession")
 
+          # Masking Secrets in Logs
+          echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')"
+          echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')"
+          echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')"
+
+          # Export Variables Securely
           echo "AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
