@@ -1,0 +1,54 @@
+name: Deploy Order Retrieval Lambda
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "lambda/order-retrieval/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Order Retrieval
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: "eu-west-1"
+      ACCOUNT_ID: "912466608750"
+      ECR_REPO: "order-retrieval"
+      LAMBDA_FUNCTION_NAME: "order-retrieval"
+      IMAGE_TAG: "latest"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::912466608750:role/aidoc-devops2-ex-github-actions
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      - name: Build Docker image
+        run: |
+          cd terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/lambda_source_code
+          docker build -t $ECR_REPO:$IMAGE_TAG .
+          docker tag $ECR_REPO:$IMAGE_TAG $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+
+      - name: Push to Amazon ECR
+        run: |
+          docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+
+      - name: Deploy Lambda function
+        run: |
+          aws lambda update-function-code \
+            --function-name $LAMBDA_FUNCTION_NAME \
+            --image-uri $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
