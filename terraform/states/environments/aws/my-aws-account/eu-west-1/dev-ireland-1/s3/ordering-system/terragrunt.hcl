@@ -19,39 +19,13 @@ locals {
 }
 
 terraform {
-  source = "${get_repo_root()}/terraform/modules/dynamodb"
+  source = "${get_repo_root()}/terraform/modules/s3"
 }
 
 inputs = {
-  table_name       = "${local.parent_folder_name}"
-  stream_enabled   = true
-  stream_view_type = "NEW_IMAGE"
-  billing_mode     = "PAY_PER_REQUEST"
-  hash_key         = "partitionKey"
-  range_key        = "sortKey"
-
-  attributes = [
-    {
-      name = "partitionKey"
-      type = "S"
-    },
-    {
-      name = "sortKey"
-      type = "S"
-    },
-    {
-      name = "orderId"
-      type = "S"
-    }
-  ]
-
-  # Ensuring `orderId` is indexed as part of the GSI
-  global_secondary_indexes = [
-    {
-      name            = "OrderIndex"
-      hash_key        = "orderId"
-      range_key       = "sortKey"
-      projection_type = "ALL"
-    }
-  ]
+  bucket_name = "${local.parent_folder_name}"
+  tags = {
+    Environment = local.environment
+    Project     = "ordering-system"
+  }
 }

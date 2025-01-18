@@ -18,53 +18,42 @@ locals {
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
 
   assignment_prefix = "aidoc-devops2-ex"
-  repos_list = [
-    "geek-kb/aidoc_assignment"
-  ]
 }
 
 terraform {
-  source = "${get_repo_root()}/terraform/modules/iam-role"
-}
-
-dependency "github_oidc_provider" {
-  config_path = "../../../_bootstrap/github-oidc/github-oidc-provider"
-
-  mock_outputs = {
-    arn = "arn:aws:iam::${local.account_id}:oidc-provider/token.actions.githubusercontent.com"
-  }
+  source = "${get_repo_root()}/terraform/modules/kms"
 }
 
 inputs = {
-  role_name = "${local.assignment_prefix}-${local.parent_folder_name}"
+  kms_key_alias = "${local.parent_folder_name}-key"
+  description   = "KMS Key for encrypting application data"
+  key_usage     = "ENCRYPT_DECRYPT"
+  key_rotation  = true
 
-  max_session_duration = 14400
-
-  assume_role_policy = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
         Effect = "Allow",
         Principal = {
-          Federated = "${dependency.github_oidc_provider.outputs.arn}"
+          AWS = [
+            "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-terraform",
+            "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-${local.assignment_prefix}-retrieval_lambda_execution"
+          ]
         },
-        Action = "sts:AssumeRoleWithWebIdentity",
-        Condition = {
-          "StringLike" = {
-            "token.actions.githubusercontent.com:sub" : [
-              for repo in "${local.repos_list}" : "repo:${repo}:*"
-            ]
-          },
-          "StringEquals" = {
-            "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
-          }
-        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:DescribeKey"
+        ],
+        Resource = "arn:aws:kms:${local.region}:${local.account_id}:key/${local.parent_folder_name}-key"
       }
     ]
   })
 
   tags = {
     Environment = local.environment_name
-    Project     = "ordering-system"
+    Purpose     = "Data Encryption"
   }
 }

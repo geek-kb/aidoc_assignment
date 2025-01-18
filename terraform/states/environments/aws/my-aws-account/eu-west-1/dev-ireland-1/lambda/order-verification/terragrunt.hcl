@@ -47,8 +47,8 @@ dependency "s3_trigger_bucket" {
   config_path = "../../s3/${local.triggering_bucket_name}"
 
   mock_outputs = {
-    bucket_name = "${local.triggering_bucket_name}"
-    bucket_arn  = "arn:aws:s3:::${local.triggering_bucket_name}"
+    s3_bucket_id  = "${local.triggering_bucket_name}"
+    s3_bucket_arn = "arn:aws:s3:::${local.triggering_bucket_name}"
   }
 }
 
@@ -56,7 +56,7 @@ dependency "sqs_queue" {
   config_path = "../../sqs/${local.sqs_queue_name}"
 
   mock_outputs = {
-    queue_url = "https://sqs.${local.region}.amazonaws.com/${local.account_id}/${local.sqs_queue_name}"
+    sqs_queue_url = "https://sqs.${local.region}.amazonaws.com/${local.account_id}/${local.sqs_queue_name}"
   }
 }
 
@@ -84,13 +84,13 @@ inputs = {
   function_source_zip_path  = "${local.function_source_zip_path}"
 
   enable_s3_trigger    = true
-  s3_bucket_name       = "${dependency.s3_trigger_bucket.outputs.bucket_name}"
+  s3_bucket_name       = "${dependency.s3_trigger_bucket.outputs.s3_bucket_id}"
   s3_trigger_directory = "${local.triggering_bucket_directory_name}/"
 
   enable_function_url = false
 
   lambda_environment = {
     DYNAMODB_TABLE_NAME = "${dependency.dynamodb_table.outputs.table_name}"
-    SQS_QUEUE_URL       = "${dependency.sqs_queue.outputs.queue_url}"
+    SQS_QUEUE_URL       = "${dependency.sqs_queue.outputs.sqs_queue_url}"
   }
 }

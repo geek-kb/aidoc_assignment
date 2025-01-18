@@ -17,6 +17,7 @@ locals {
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
 
+  assignment_prefix = "aidoc-devops2-ex"
 }
 
 terraform {
@@ -27,14 +28,15 @@ dependency "kms-terraform-state-key" {
   config_path = "../../kms/terraform-state-key"
 
   mock_outputs = {
-    key_arn = "(known after apply-all)"
+    key_arn = "(known after apply)"
   }
 }
 
 inputs = {
-  bucket_name   = "${local.parent_folder_name}"
+  bucket_name   = "${local.parent_folder_name}-l9bsjdh"
   versioning    = true
   force_destroy = false
+  encryption    = true
   kms_key_arn   = dependency.kms-terraform-state-key.outputs.key_arn
 
   lifecycle_rules = [
@@ -50,4 +52,3 @@ inputs = {
     Project     = "ordering-system"
   }
 }
-

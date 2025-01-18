@@ -16,25 +16,17 @@ locals {
   parent_folder_path  = split("/", path_relative_to_include())
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
-
-  assignment_prefix = "aidoc-devops2-ex"
 }
 
 terraform {
-  source = "${get_repo_root()}/terraform/modules/kms"
+  source = "${get_repo_root()}/terraform/modules/s3"
 }
 
 inputs = {
-  kms_key_alias = "${local.environment}/${local.assignment_prefix}-sops-key"
-
-  kms_admins = [
-    "arn:aws:iam::${local.account_id}:user/itaig"
-  ]
-
-  sops_roles = [] # GitHub Actions IAM role will be added AFTER creation
-
+  bucket_name   = "${local.parent_folder_name}"
+  force_destroy = true
   tags = {
-    Environment = local.environment_name
+    Environment = local.environment
     Project     = "ordering-system"
   }
 }

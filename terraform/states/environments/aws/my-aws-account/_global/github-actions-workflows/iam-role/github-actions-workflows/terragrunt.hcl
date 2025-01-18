@@ -25,18 +25,36 @@ terraform {
 }
 
 dependency "kms_terraform_state" {
-  config_path = "../../../terraform/kms/terraform-state-key"
+  config_path = "../../../_bootstrap/kms/terraform-state-key"
+
+  mock_outputs = {
+    key_arn = "arn:aws:kms:${local.region}:${local.account_id}:key/mock-key-id"
+  }
 }
 
 dependency "kms_sops" {
-  config_path = "../../../terraform/kms/sops-key"
+  config_path = "../../../_bootstrap/kms/sops-key"
+
+  mock_outputs = {
+    key_arn = "arn:aws:kms:${local.region}:${local.account_id}:key/mock-key-id"
+  }
 }
 
 dependency "github_oidc_provider" {
-  config_path = "../../github-oidc-provider"
+  config_path = "../../../_bootstrap/github-oidc/github-oidc-provider"
+
+  skip_outputs = true # No outputs needed
 
   mock_outputs = {
     arn = "arn:aws:iam::${local.account_id}:oidc-provider/token.actions.githubusercontent.com"
+  }
+}
+
+dependency "iam_role_github_oidc_auth" {
+  config_path = "../../../github-actions-workflows/iam-role/github-oidc-auth"
+
+  mock_outputs = {
+    arn = "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-oidc-auth"
   }
 }
 
@@ -53,7 +71,7 @@ inputs = {
     {
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-oidc-auth"
+        "AWS": "${dependency.iam_role_github_oidc_auth.outputs.arn}"
       },
       "Action": "sts:AssumeRole"
     }

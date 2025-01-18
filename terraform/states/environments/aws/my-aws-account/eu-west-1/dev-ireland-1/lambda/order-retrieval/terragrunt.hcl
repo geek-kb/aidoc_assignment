@@ -57,13 +57,13 @@ dependency "sqs_queue" {
   config_path = "../../sqs/order-processor"
 
   mock_outputs = {
-    queue_url = "https://sqs.${local.region}.amazonaws.com/${local.account_id}/order-processor"
+    sqs_queue_url = "https://sqs.${local.region}.amazonaws.com/${local.account_id}/order-processor"
   }
 }
 
 inputs = {
   function_name       = local.function_name
-  iam_lambda_role_arn = dependency.iam_role.outputs.arn
+  iam_lambda_role_arn = "${dependency.iam_role.outputs.arn}"
   memory_size         = 128
   timeout             = 60
   containerization    = true
@@ -80,6 +80,6 @@ inputs = {
 
   lambda_environment = {
     DYNAMODB_TABLE_NAME = "orders"
-    SQS_QUEUE_URL       = dependency.sqs_queue.outputs.queue_url
+    SQS_QUEUE_URL       = "${dependency.sqs_queue.outputs.sqs_queue_url}"
   }
 }

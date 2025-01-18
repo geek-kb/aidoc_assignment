@@ -16,42 +16,25 @@ locals {
   parent_folder_path  = split("/", path_relative_to_include())
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
+
+  assignment_prefix = "aidoc-devops2-ex"
 }
 
 terraform {
-  source = "${get_repo_root()}/terraform/modules/dynamodb"
+  source = "${get_repo_root()}/terraform/modules/kms"
 }
 
 inputs = {
-  table_name       = "${local.parent_folder_name}"
-  stream_enabled   = true
-  stream_view_type = "NEW_IMAGE"
-  billing_mode     = "PAY_PER_REQUEST"
-  hash_key         = "partitionKey"
-  range_key        = "sortKey"
+  kms_key_alias = "${local.environment_name}/sops-key"
 
-  attributes = [
-    {
-      name = "partitionKey"
-      type = "S"
-    },
-    {
-      name = "sortKey"
-      type = "S"
-    },
-    {
-      name = "orderId"
-      type = "S"
-    }
+  kms_admins = [
+    "arn:aws:iam::${local.account_id}:user/itaig"
   ]
 
-  # Ensuring `orderId` is indexed as part of the GSI
-  global_secondary_indexes = [
-    {
-      name            = "OrderIndex"
-      hash_key        = "orderId"
-      range_key       = "sortKey"
-      projection_type = "ALL"
-    }
-  ]
+  sops_roles = [] # GitHub Actions IAM role will be added AFTER creation
+
+  tags = {
+    Environment = local.environment_name
+    Project     = "ordering-system"
+  }
 }

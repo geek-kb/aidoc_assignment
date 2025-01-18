@@ -24,6 +24,30 @@ terraform {
   source = "${get_repo_root()}/terraform/modules/iam-role"
 }
 
+dependency "iam_role_github_actions_workflows" {
+  config_path = "../../../github-actions-workflows/iam-role/github-actions-workflows"
+
+  mock_outputs = {
+    arn = "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-actions-workflows"
+  }
+}
+
+dependency "iam_role_sops" {
+  config_path = "../sops-role"
+
+  mock_outputs = {
+    arn = "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-sops-role"
+  }
+}
+
+dependency "s3_state" {
+  config_path = "../../../_bootstrap/s3/terraform-state"
+
+  mock_outputs = {
+    s3_bucket_arn = "arn:aws:s3:::${local.assignment_prefix}-terraform-state",
+  }
+}
+
 inputs = {
   role_name = "${local.assignment_prefix}-${local.parent_folder_name}"
 
@@ -37,9 +61,8 @@ inputs = {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-admin",
-          "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-actions-workflows",
-          "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-sops-role"
+          "${dependency.iam_role_github_actions_workflows.outputs.arn}",
+          "${dependency.iam_role_sops.outputs.arn}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -50,11 +73,11 @@ EOF
 
   inline_policies_to_attach = {
     S3-Terraform-State = {
-      "Version": "2012-10-17",
-      "Statement": [
+      "Version" : "2012-10-17",
+      "Statement" : [
         {
-          "Effect": "Allow",
-          "Action": [
+          "Effect" : "Allow",
+          "Action" : [
             "s3:ListBucket",
             "s3:GetObject",
             "s3:PutObject",
@@ -62,34 +85,34 @@ EOF
             "s3:PutBucketVersioning",
             "s3:DeleteObject"
           ],
-          "Resource": [
-            "arn:aws:s3:::${local.assignment_prefix}-terraform-state",
-            "arn:aws:s3:::${local.assignment_prefix}-terraform-state/*"
+          "Resource" : [
+            "${dependency.s3_state.outputs.s3_bucket_arn}",
+            "${dependency.s3_state.outputs.s3_bucket_arn}/*"
           ]
         }
       ]
     },
     DynamoDB-Terraform-Locks = {
-      "Version": "2012-10-17",
-      "Statement": [
+      "Version" : "2012-10-17",
+      "Statement" : [
         {
-          "Effect": "Allow",
-          "Action": [
+          "Effect" : "Allow",
+          "Action" : [
             "dynamodb:PutItem",
             "dynamodb:GetItem",
             "dynamodb:DeleteItem",
             "dynamodb:DescribeTable"
           ],
-          "Resource": "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks"
+          "Resource" : "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks"
         }
       ]
     },
     Lambda-Deployment = {
-      "Version": "2012-10-17",
-      "Statement": [
+      "Version" : "2012-10-17",
+      "Statement" : [
         {
-          "Effect": "Allow",
-          "Action": [
+          "Effect" : "Allow",
+          "Action" : [
             "lambda:CreateFunction",
             "lambda:UpdateFunctionConfiguration",
             "lambda:UpdateFunctionCode",
@@ -97,19 +120,18 @@ EOF
             "lambda:GetFunction",
             "lambda:DeleteFunction"
           ],
-          "Resource": "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.assignment_prefix}-*"
+          "Resource" : "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.assignment_prefix}-*"
         }
       ]
     },
     IAM-AssumeRole = {
-      "Version": "2012-10-17",
-      "Statement": [
+      "Version" : "2012-10-17",
+      "Statement" : [
         {
-          "Effect": "Allow",
-          "Action": "sts:AssumeRole",
-          "Resource": [
-            "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-state-manager",
-            "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-terraform"
+          "Effect" : "Allow",
+          "Action" : "sts:AssumeRole",
+          "Resource" : [
+            "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-state-manager"
           ]
         }
       ]

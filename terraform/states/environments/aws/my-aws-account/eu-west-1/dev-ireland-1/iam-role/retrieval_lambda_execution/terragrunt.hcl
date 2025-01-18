@@ -17,7 +17,8 @@ locals {
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
 
-  triggering_bucket_name             = "ordering-system"
+  function_name                      = "order-retrieval"
+  bucket_name                        = "ordering-system"
   bucket_directory_and_db_table_name = "orders"
   sqs_queue_name                     = "order-processor"
 
@@ -28,27 +29,35 @@ terraform {
   source = "${get_repo_root()}/terraform/modules/iam-role"
 }
 
-dependency "s3_trigger_bucket" {
-  config_path = "../../s3/${local.triggering_bucket_name}"
+dependency "ecr_order_retrieval" {
+  config_path = "../../ecr/${local.function_name}"
 
   mock_outputs = {
-    s3_bucket_arn = "arn:aws:s3:::${local.triggering_bucket_name}"
+    repository_arn = "arn:aws:ecr:${local.region}:${local.account_id}:repository/${local.function_name}"
   }
 }
 
-dependency "sqs_queue" {
-  config_path = "../../sqs/${local.sqs_queue_name}"
+dependency "s3_ordering_system" {
+  config_path = "../../s3/${local.bucket_name}"
 
   mock_outputs = {
-    queue_arn = "arn:aws:sqs:${local.region}:${local.account_id}:${local.sqs_queue_name}"
+    s3_bucket_arn = "arn:aws:s3:::${local.assignment_prefix}-${local.bucket_name}"
   }
 }
 
-dependency "dynamodb_table" {
+dependency "dynamodb_orders" {
   config_path = "../../dynamodb/${local.bucket_directory_and_db_table_name}"
 
   mock_outputs = {
     table_arn = "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.bucket_directory_and_db_table_name}"
+  }
+}
+
+dependency "sqs_order_processor" {
+  config_path = "../../sqs/${local.sqs_queue_name}"
+
+  mock_outputs = {
+    sqs_queue_arn = "arn:aws:sqs:${local.region}:${local.account_id}:${local.sqs_queue_name}"
   }
 }
 
@@ -71,56 +80,30 @@ inputs = {
   })
 
   inline_policies_to_attach = {
-    # Restrict SQS Access to only send messages to the order processor queue
-    SQSSendMessage = {
+    # ECR Access: Restrict access to the order-retrieval repository only
+    ECRAccess = {
       "Version" : "2012-10-17",
       "Statement" : [
         {
           "Effect" : "Allow",
           "Action" : [
-            "sqs:SendMessage"
+            "ecr:BatchGetImage",
+            "ecr:GetDownloadUrlForLayer"
           ],
-          "Resource" : dependency.sqs_queue.outputs.queue_arn
-        }
-      ]
-    },
-
-    # Restrict S3 access to only read from the specific bucket
-    S3ReadAccess = {
-      "Version" : "2012-10-17",
-      "Statement" : [
+          "Resource" : "${dependency.ecr_order_retrieval.outputs.repository_arn}"
+        },
         {
           "Effect" : "Allow",
           "Action" : [
-            "s3:GetObject",
-            "s3:ListBucket"
+            "ecr:GetAuthorizationToken"
           ],
-          "Resource" : [
-            "${dependency.s3_trigger_bucket.outputs.s3_bucket_arn}",
-            "${dependency.s3_trigger_bucket.outputs.s3_bucket_arn}/*"
-          ]
+          "Resource" : "*"
         }
       ]
     },
 
-    # Restrict DynamoDB access to only read data from the orders table
-    DynamoDBReadAccess = {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Effect" : "Allow",
-          "Action" : [
-            "dynamodb:GetItem",
-            "dynamodb:Query",
-            "dynamodb:Scan"
-          ],
-          "Resource" : dependency.dynamodb_table.outputs.table_arn
-        }
-      ]
-    },
-
-    # Lambda CloudWatch Logging permissions
-    LambdaCloudWatch = {
+    # Lambda Execution: Allows logging and necessary permissions for execution
+    LambdaExecution = {
       "Version" : "2012-10-17",
       "Statement" : [
         {
@@ -131,6 +114,62 @@ inputs = {
             "logs:PutLogEvents"
           ],
           "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.assignment_prefix}-${local.parent_folder_name}:*"
+        },
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "xray:PutTraceSegments",
+            "xray:PutTelemetryRecords"
+          ],
+          "Resource" : "*"
+        }
+      ]
+    },
+
+    # S3 Access: (Assumed based on Lambda needing access to an S3 bucket)
+    S3ReadAccess = {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "s3:GetObject",
+            "s3:ListBucket"
+          ],
+          "Resource" : [
+            "${dependency.s3_ordering_system.outputs.s3_bucket_arn}",
+            "${dependency.s3_ordering_system.outputs.s3_bucket_arn}/*"
+          ]
+        }
+      ]
+    },
+
+    # DynamoDB Access: (If Lambda needs to read from a DynamoDB table)
+    DynamoDBReadAccess = {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "dynamodb:GetItem",
+            "dynamodb:Query",
+            "dynamodb:Scan"
+          ],
+          "Resource" : "${dependency.dynamodb_orders.outputs.table_arn}"
+        }
+      ]
+    },
+
+    # SQS Access: (If Lambda needs to send messages to an SQS queue)
+    SQSSendMessage = {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "sqs:SendMessage"
+          ],
+          "Resource" : "${dependency.sqs_order_processor.outputs.sqs_queue_arn}"
         }
       ]
     }

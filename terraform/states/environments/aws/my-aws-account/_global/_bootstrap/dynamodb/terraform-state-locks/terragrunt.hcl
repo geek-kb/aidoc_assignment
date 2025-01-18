@@ -25,7 +25,7 @@ terraform {
 }
 
 inputs = {
-  table_name   = "${local.assignment_prefix}-${local.parent_folder_name}"
+  table_name   = "${local.environment_name}-${local.parent_folder_name}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
   environment  = local.environment
@@ -39,7 +39,6 @@ inputs = {
 
   tags = {
     Environment_Name = local.environment_name
-    Project     = "ordering-system"
+    Project          = "ordering-system"
   }
 }
-

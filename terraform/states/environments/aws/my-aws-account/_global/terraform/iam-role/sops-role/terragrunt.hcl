@@ -25,10 +25,10 @@ terraform {
 }
 
 dependency "kms_sops" {
-  config_path = "../../kms/sops-key"
+  config_path = "../../../_bootstrap/kms/sops-key"
 
   mock_outputs = {
-    key_arn = "(known after apply-all)"
+    key_arn = "arn:aws:kms:${local.region}:${local.account_id}:key/mock-key-id"
   }
 }
 
@@ -74,4 +74,3 @@ EOF
     Project     = "ordering-system"
   }
 }
-

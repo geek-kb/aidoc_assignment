@@ -23,11 +23,10 @@ terraform {
 }
 
 inputs = {
-  bucket_name = "${local.parent_folder_name}"
+  bucket_name   = "${local.parent_folder_name}"
   force_destroy = true
   tags = {
     Environment = local.environment
     Project     = "ordering-system"
   }
 }
-

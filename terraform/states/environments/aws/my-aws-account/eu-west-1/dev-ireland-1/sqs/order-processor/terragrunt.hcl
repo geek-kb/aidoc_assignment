@@ -19,39 +19,28 @@ locals {
 }
 
 terraform {
-  source = "${get_repo_root()}/terraform/modules/dynamodb"
+  source = "${get_repo_root()}/terraform/modules/sqs"
 }
 
 inputs = {
-  table_name       = "${local.parent_folder_name}"
-  stream_enabled   = true
-  stream_view_type = "NEW_IMAGE"
-  billing_mode     = "PAY_PER_REQUEST"
-  hash_key         = "partitionKey"
-  range_key        = "sortKey"
+  queue_name                    = "${local.parent_folder_name}"
+  create_dlq                    = true
+  dlq_max_receive_count         = 5
+  dlq_message_retention_seconds = 1209600
 
-  attributes = [
+  sqs_policies = [
     {
-      name = "partitionKey"
-      type = "S"
-    },
-    {
-      name = "sortKey"
-      type = "S"
-    },
-    {
-      name = "orderId"
-      type = "S"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+      Action   = "sqs:SendMessage"
+      Resource = "arn:aws:sqs:${local.region}:${local.account_id}:${local.parent_folder_name}"
     }
   ]
 
-  # Ensuring `orderId` is indexed as part of the GSI
-  global_secondary_indexes = [
-    {
-      name            = "OrderIndex"
-      hash_key        = "orderId"
-      range_key       = "sortKey"
-      projection_type = "ALL"
-    }
-  ]
+  tags = {
+    Environment = local.environment
+    Project     = "ordering-system"
+  }
 }

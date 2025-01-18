@@ -24,6 +24,22 @@ terraform {
   source = "${get_repo_root()}/terraform/modules/iam-role"
 }
 
+dependency "s3_state" {
+  config_path = "../../../_bootstrap/s3/terraform-state"
+
+  mock_outputs = {
+    s3_bucket_arn = "arn:aws:s3:::${local.assignment_prefix}-terraform-state"
+  }
+}
+
+dependency "dynamodb_state_locks" {
+  config_path = "../../../_bootstrap/dynamodb/terraform-state-locks"
+
+  mock_outputs = {
+    table_arn = "arn:aws:dynamodb:${local.region}:${local.account_id}:table/mock-table-id"
+  }
+}
+
 inputs = {
   role_name = "${local.assignment_prefix}-${local.parent_folder_name}"
 
@@ -76,7 +92,7 @@ EOF
             "dynamodb:DeleteItem",
             "dynamodb:CreateTable"
           ],
-          "Resource" : "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks"
+          "Resource" : "${dependency.dynamodb_state_locks.outputs.table_arn}"
         }
       ]
     },
@@ -101,7 +117,7 @@ EOF
             "s3:PutBucketAcl",
             "s3:PutBucketLogging"
           ],
-          "Resource" : "arn:aws:s3:::${local.assignment_prefix}-terraform-state"
+          "Resource" : "${dependency.s3_state.outputs.s3_bucket_arn}"
         },
         {
           "Effect" : "Allow",
@@ -109,7 +125,7 @@ EOF
             "s3:GetObject",
             "s3:PutObject"
           ],
-          "Resource" : "arn:aws:s3:::${local.assignment_prefix}-terraform-state/*"
+          "Resource" : "${dependency.s3_state.outputs.s3_bucket_arn}/*"
         }
       ]
     }

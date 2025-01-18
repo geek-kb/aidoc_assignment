@@ -40,7 +40,7 @@ dependency "sqs_queue" {
   config_path = "../../sqs/${local.sqs_queue_name}"
 
   mock_outputs = {
-    queue_arn = "arn:aws:sqs:${local.region}:${local.account_id}:${local.sqs_queue_name}"
+    sqs_queue_arn = "arn:aws:sqs:${local.region}:${local.account_id}:${local.sqs_queue_name}"
   }
 }
 
@@ -80,7 +80,7 @@ inputs = {
           "Action" : [
             "sqs:SendMessage"
           ],
-          "Resource" : dependency.sqs_queue.outputs.queue_arn
+          "Resource" : "${dependency.sqs_queue.outputs.sqs_queue_arn}"
         }
       ]
     },
@@ -114,7 +114,7 @@ inputs = {
             "dynamodb:Query",
             "dynamodb:Scan"
           ],
-          "Resource" : dependency.dynamodb_table.outputs.table_arn
+          "Resource" : "${dependency.dynamodb_table.outputs.table_arn}"
         }
       ]
     },

@@ -17,10 +17,10 @@ locals {
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
 
-  function_name         = "order-retrieval"
-  bucket_name           = "ordering-system"
+  function_name                      = "order-retrieval"
+  bucket_name                        = "ordering-system"
   bucket_directory_and_db_table_name = "orders"
-  sqs_queue_name = "order-processor"
+  sqs_queue_name                     = "order-processor"
 
   assignment_prefix = "aidoc-devops2-ex"
 }
@@ -104,39 +104,39 @@ inputs = {
 
     # Lambda Execution: Allows logging and necessary permissions for execution
     LambdaExecution = {
-      "Version": "2012-10-17",
-      "Statement": [
+      "Version" : "2012-10-17",
+      "Statement" : [
         {
-          "Effect": "Allow",
-          "Action": [
+          "Effect" : "Allow",
+          "Action" : [
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:PutLogEvents"
           ],
-          "Resource": "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.assignment_prefix}-${local.parent_folder_name}:*"
+          "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.assignment_prefix}-${local.parent_folder_name}:*"
         },
         {
-          "Effect": "Allow",
-          "Action": [
+          "Effect" : "Allow",
+          "Action" : [
             "xray:PutTraceSegments",
             "xray:PutTelemetryRecords"
           ],
-          "Resource": "*"
+          "Resource" : "*"
         }
       ]
     },
 
     # S3 Access: (Assumed based on Lambda needing access to an S3 bucket)
     S3ReadAccess = {
-      "Version": "2012-10-17",
-      "Statement": [
+      "Version" : "2012-10-17",
+      "Statement" : [
         {
-          "Effect": "Allow",
-          "Action": [
+          "Effect" : "Allow",
+          "Action" : [
             "s3:GetObject",
             "s3:ListBucket"
           ],
-          "Resource": [
+          "Resource" : [
             "${dependency.s3_ordering_system.outputs.s3_bucket_arn}",
             "${dependency.s3_ordering_system.outputs.s3_bucket_arn}/*"
           ]
@@ -146,30 +146,30 @@ inputs = {
 
     # DynamoDB Access: (If Lambda needs to read from a DynamoDB table)
     DynamoDBReadAccess = {
-      "Version": "2012-10-17",
-      "Statement": [
+      "Version" : "2012-10-17",
+      "Statement" : [
         {
-          "Effect": "Allow",
-          "Action": [
+          "Effect" : "Allow",
+          "Action" : [
             "dynamodb:GetItem",
             "dynamodb:Query",
             "dynamodb:Scan"
           ],
-          "Resource": dependency.dynamodb_orders.outputs.table_arn
+          "Resource" : dependency.dynamodb_orders.outputs.table_arn
         }
       ]
     },
 
     # SQS Access: (If Lambda needs to send messages to an SQS queue)
     SQSSendMessage = {
-      "Version": "2012-10-17",
-      "Statement": [
+      "Version" : "2012-10-17",
+      "Statement" : [
         {
-          "Effect": "Allow",
-          "Action": [
+          "Effect" : "Allow",
+          "Action" : [
             "sqs:SendMessage"
           ],
-          "Resource": dependency.sqs_order_processor.outputs.queue_arn
+          "Resource" : dependency.sqs_order_processor.outputs.queue_arn
         }
       ]
     }
