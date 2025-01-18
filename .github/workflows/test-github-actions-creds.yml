@@ -30,8 +30,8 @@ jobs:
           export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')
           export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')
           
-        - name: Verify Assumed Role
-          run: aws sts get-caller-identity
+      - name: Verify Assumed Role
+        run: aws sts get-caller-identity
 
       - name: Test AWS CLI
         run: aws sts get-caller-identity
