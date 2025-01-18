@@ -24,21 +24,22 @@ terraform {
   source = "${get_repo_root()}/terraform/modules/iam-role"
 }
 
-#dependency "s3" {
-#  config_path = "../../../terraform/s3/aidoc-devops2-ex-terraform-state"
-#}
-#
-#dependency "dynamodb" {
-#  config_path = "../../../terraform/dynamodb/terraform-state-locks"
-#}
-#
-#dependency "kms_terraform_state" {
-#  config_path = "../../../terraform/kms/terraform-state-key"
-#}
-#
-#dependency "kms_sops" {
-#  config_path = "../../../terraform/kms/sops-key"
-#}
+dependency "kms_terraform_state" {
+  config_path = "../../../terraform/kms/terraform-state-key"
+}
+
+dependency "kms_sops" {
+  config_path = "../../../terraform/kms/sops-key"
+}
+
+dependency "github_oidc_provider" {
+  config_path = "../../github-oidc-provider"
+
+  mock_outputs = {
+    arn = "arn:aws:iam::${local.account_id}:oidc-provider/token.actions.githubusercontent.com"
+  }
+}
+
 
 inputs = {
   role_name = "${local.assignment_prefix}-${local.parent_folder_name}"
@@ -52,33 +53,30 @@ inputs = {
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::${local.account_id}:oidc-provider/token.actions.githubusercontent.com"
+        "AWS": "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-oidc-auth"
       },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringEquals": {
-          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-        }
-      }
+      "Action": "sts:AssumeRole"
     }
   ]
 }
 EOF
 
-  managed_iam_policies_to_attach = [
-    "arn:aws:iam::aws:policy/PowerUserAccess"
-  ]
-
   inline_policies_to_attach = {
-    AssumeTerraformRoles = {
-      "Version" : "2012-10-17",
-      "Statement" : [
+    TerraformResourceAccess = {
+      Version = "2012-10-17",
+      Statement = [
         {
-          "Effect" : "Allow",
-          "Action" : "sts:AssumeRole",
-          "Resource" : [
-            "arn:aws:iam::${local.account_id}:role/TerraformStateManager",
-            "arn:aws:iam::${local.account_id}:role/terraform"
+          Effect = "Allow",
+          Action = [
+            "kms:Encrypt",
+            "kms:Decrypt",
+            "kms:ReEncrypt*",
+            "kms:GenerateDataKey*",
+            "kms:DescribeKey"
+          ],
+          Resource = [
+            dependency.kms_terraform_state.outputs.key_arn,
+            dependency.kms_sops.outputs.key_arn
           ]
         }
       ]
@@ -86,7 +84,7 @@ EOF
   }
 
   tags = {
-    Environment = "bootstrap"
+    Environment = local.environment_name
     Project     = "ordering-system"
   }
 }

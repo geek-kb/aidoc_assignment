@@ -1,9 +1,11 @@
-# KMS Key (if enabled)
-resource "aws_kms_key" "this" {  
+# Get the current AWS account ID
+data "aws_caller_identity" "current" {}
+
+# Create a new KMS Key only if it is not imported
+resource "aws_kms_key" "kms_key" {
   description             = "KMS key for secure encryption"
-  deletion_window_in_days = 30
+  deletion_window_in_days = 7
   enable_key_rotation     = var.enable_key_rotation
-#  is_enabled              = true
   key_usage               = var.key_usage
   customer_master_key_spec = var.key_spec
   multi_region            = var.enable_multi_region
@@ -29,11 +31,8 @@ resource "aws_kms_key" "this" {
   tags = var.tags
 }
 
-# KMS Key Alias (if provided)
-resource "aws_kms_alias" "this" {
+# Create a KMS Alias
+resource "aws_kms_alias" "kms_key_alias" {
   name          = "alias/${var.kms_key_alias}"
-  target_key_id = aws_kms_key.this.id
+  target_key_id = aws_kms_key.kms_key.id
 }
-
-# Get the current AWS account ID
-data "aws_caller_identity" "current" {}

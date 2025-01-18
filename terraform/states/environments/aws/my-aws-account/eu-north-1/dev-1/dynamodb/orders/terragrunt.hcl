@@ -43,7 +43,7 @@ inputs = {
     }
   ]
 
-  # ✅ Fixed: Ensuring `orderId` is indexed as part of the GSI
+  # Ensuring `orderId` is indexed as part of the GSI
   global_secondary_indexes = [
     {
       name            = "OrderIndex"

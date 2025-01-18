@@ -37,8 +37,8 @@ inputs = {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::${local.account_id}:role/github-actions-workflows",
-          "arn:aws:iam::${local.account_id}:role/Terraform"
+          "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-actions-workflows",
+          "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-terraform"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -60,7 +60,7 @@ EOF
             "dynamodb:DeleteItem",
             "dynamodb:CreateTable"
           ],
-          "Resource" : "arn:aws:dynamodb:${local.region}:${local.account_id}:table/terraform-state-locks"
+          "Resource" : "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks"
         }
       ]
     },
@@ -100,7 +100,7 @@ EOF
   }
 
   tags = {
-    Environment = "bootstrap"
+    Environment = "${local.environment_name}"
     Project     = "ordering-system"
   }
 }

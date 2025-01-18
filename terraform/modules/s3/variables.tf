@@ -3,7 +3,7 @@ variable "bucket_name" {
   type        = string
 }
 
-variable "enable_encryption" {
+variable "encryption" {
   description = "Enable encryption for the bucket using KMS"
   type        = bool
   default     = false
@@ -15,7 +15,7 @@ variable "kms_key_arn" {
   default     = ""
 }
 
-variable "enable_logging" {
+variable "logging" {
   description = "Enable access logging for the bucket"
   type        = bool
   default     = false
@@ -39,7 +39,7 @@ variable "bucket_policy" {
   default     = ""
 }
 
-variable "enable_versioning" {
+variable "versioning" {
   description = "Enable versioning for the bucket"
   type        = bool
   default     = false

@@ -18,60 +18,53 @@ locals {
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
 
   assignment_prefix = "aidoc-devops2-ex"
+  repos_list = [
+    "geek-kb/aidoc_assignment"
+  ]
 }
 
 terraform {
   source = "${get_repo_root()}/terraform/modules/iam-role"
 }
 
-dependency "kms_sops" {
-  config_path = "../../kms/sops-key"
+dependency "github_oidc_provider" {
+  config_path = "../../github-oidc-provider"
 
   mock_outputs = {
-    key_arn = "(known after apply-all)"
+    arn = "arn:aws:iam::${local.account_id}:oidc-provider/token.actions.githubusercontent.com"
   }
 }
 
 inputs = {
   role_name = "${local.assignment_prefix}-${local.parent_folder_name}"
+  
+  max_session_duration = 14400
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-actions-workflows"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-
-  kms_policies_to_attach = {
-    SopsKMS = {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Effect" : "Allow",
-          "Action" : [
-            "kms:Encrypt",
-            "kms:Decrypt",
-            "kms:ReEncrypt*",
-            "kms:GenerateDataKey*",
-            "kms:DescribeKey"
-          ],
-          "Resource" : "${dependency.kms_sops.outputs.key_arn}"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Federated = "${dependency.github_oidc_provider.outputs.arn}"
+        },
+        Action = "sts:AssumeRoleWithWebIdentity",
+        Condition = {
+          "StringLike" = {
+            "token.actions.githubusercontent.com:sub": [
+              for repo in "${local.repos_list}" : "repo:${repo}:*"
+            ]
+          },
+          "StringEquals" = {
+            "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+          }
         }
-      ]
-    }
-  }
+      }
+    ]
+  })
 
   tags = {
-    Environment = "${local.environment_name}"
+    Environment = local.environment_name
     Project     = "ordering-system"
   }
 }
-

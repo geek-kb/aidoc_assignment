@@ -23,7 +23,7 @@ terraform {
   source = "${get_repo_root()}/terraform/modules/s3"
 }
 
-dependency "kms" {
+dependency "kms-terraform-state-key" {
   config_path = "../../kms/terraform-state-key"
 
   mock_outputs = {
@@ -35,7 +35,7 @@ inputs = {
   bucket_name   = "${local.parent_folder_name}"
   versioning    = true
   force_destroy = false
-  kms_key_arn   = dependency.kms.outputs.key_arn
+  kms_key_arn   = dependency.kms-terraform-state-key.outputs.key_arn
 
   lifecycle_rules = [
     {

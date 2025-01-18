@@ -23,29 +23,43 @@ locals {
   }
 }
 
-remote_state {
-  backend = "s3"
-  generate = {
-    path      = "backend.tf"
-    if_exists = "overwrite_terragrunt"
-  }
-  config = {
-    bucket         = "${local.assignment_prefix}-terraform-state"
-    key            = "${path_relative_to_include()}/terraform.tfstate"
-    region         = "${local.region}"
-    encrypt        = true
-    kms_key_id     = "arn:aws:kms:${local.region}:${local.account_id}:alias/terraform-state-key"
-    dynamodb_table = "terraform-locks"
-  }
-}
+# remote_state {
+#   backend = "s3"
+#   generate = {
+#     path      = "backend.tf"
+#     if_exists = "overwrite_terragrunt"
+#   }
+#   config = {
+#     bucket         = "${local.assignment_prefix}-terraform-state"
+#     key            = "${path_relative_to_include()}/terraform.tfstate"
+#     region         = "${local.region}"
+#     encrypt        = true
+#     kms_key_id     = "arn:aws:kms:${local.region}:${local.account_id}:alias/dev/terraform-state-key"
+#     dynamodb_table = "terraform-state-locks"
+#   }
+# }
 
 generate "provider" {
   path      = "provider.tf"
   if_exists = "overwrite_terragrunt"
   contents  = <<EOF
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.84.0"
+    }
+    sops = {
+      source  = "carlpett/sops"
+      version = ">= 0.7.2"
+    }
+  }
+}
 provider "aws" {
   region = "${local.region}"
 }
+
+provider "sops" {}
 EOF
 }
 

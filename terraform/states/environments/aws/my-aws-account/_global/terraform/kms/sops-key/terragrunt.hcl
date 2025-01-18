@@ -25,15 +25,16 @@ terraform {
 }
 
 inputs = {
-#  create_kms_key = true
-  kms_key_description = "KMS Key for SOPS Encryption"
-  kms_key_alias       = "sops-key"
-  kms_admins          = ["arn:aws:iam::${local.account_id}:role/AdminRole"]
-  sops_roles          = ["arn:aws:iam::${local.account_id}:role/sops-role"]
+  kms_key_alias = "${local.environment}/${local.assignment_prefix}-sops-key"
+
+  kms_admins = [
+    "arn:aws:iam::${local.account_id}:user/itaig"
+  ]
+
+  sops_roles = [] # GitHub Actions IAM role will be added AFTER creation
 
   tags = {
-    Environment = "bootstrap"
+    Environment = local.environment_name
     Project     = "ordering-system"
   }
 }
-

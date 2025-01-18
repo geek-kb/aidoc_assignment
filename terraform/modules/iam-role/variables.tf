@@ -38,11 +38,6 @@ variable "kms_policies_to_attach" {
   default     = {}
 }
 
-output "iam_role_arn" {
-  description = "The ARN of the IAM role"
-  value       = aws_iam_role.this[0].arn
-}
-
 variable "region" {
   description = "The AWS region"
   type        = string

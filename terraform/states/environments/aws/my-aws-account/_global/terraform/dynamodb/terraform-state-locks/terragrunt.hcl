@@ -16,6 +16,8 @@ locals {
   parent_folder_path  = split("/", path_relative_to_include())
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
+
+  assignment_prefix = "aidoc-devops2-ex"
 }
 
 terraform {
@@ -23,9 +25,10 @@ terraform {
 }
 
 inputs = {
-  table_name   = "${local.parent_folder_name}"
+  table_name   = "${local.assignment_prefix}-${local.parent_folder_name}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
+  environment  = local.environment
 
   attributes = [
     {
@@ -35,7 +38,7 @@ inputs = {
   ]
 
   tags = {
-    Environment = local.environment_name
+    Environment_Name = local.environment_name
     Project     = "ordering-system"
   }
 }

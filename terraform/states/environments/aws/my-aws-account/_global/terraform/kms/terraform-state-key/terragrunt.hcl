@@ -25,15 +25,16 @@ terraform {
 }
 
 inputs = {
-  create_kms_key = true
-  kms_key_description = "Terraform State Encryption Key"
-  kms_key_alias       = "terraform-state-key"
-  kms_admins          = ["arn:aws:iam::${local.account_id}:role/github-actions-workflows"]
-  sops_roles          = []
+  kms_key_alias = "${local.environment}/${local.assignment_prefix}-terraform-state-key"
+
+  kms_admins = [
+    "arn:aws:iam::${local.account_id}:user/itaig"
+  ]
+
+  sops_roles = [] # GitHub Actions IAM role will be added AFTER creation
 
   tags = {
-    Environment = "bootstrap"
+    Environment = local.environment_name
     Project     = "ordering-system"
   }
 }
-
