@@ -29,7 +29,7 @@ jobs:
       - name: Configure AWS Credentials for OIDC Auth Role
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/aidoc-devops2-ex-github-oidc-auth
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/aidoc-devops2-ex-github-oidc-auth
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Verify OIDC Auth Role
