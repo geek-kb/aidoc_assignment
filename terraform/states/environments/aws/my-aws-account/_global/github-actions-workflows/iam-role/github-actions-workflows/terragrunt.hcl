@@ -17,7 +17,8 @@ locals {
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
 
-  assignment_prefix = "aidoc-devops2-ex"
+  assignment_prefix    = "aidoc-devops2-ex"
+  lambda_function_name = "order-retrieval"
 }
 
 terraform {
@@ -58,6 +59,21 @@ dependency "iam_role_github_oidc_auth" {
   }
 }
 
+dependency "ecr_order_retrieval" {
+  config_path = "../../../../eu-west-1/dev-ireland-1/ecr/order-retrieval"
+
+  mock_outputs = {
+    repository_arn = "arn:aws:ecr:${local.region}:${local.account_id}:repository/order-retrieval"
+  }
+}
+
+dependency "lambda_order_retrieval" {
+  config_path = "../../../../eu-west-1/dev-ireland-1/lambda/order-retrieval"
+
+  mock_outputs = {
+    function_arn = "arn:aws:lambda:${local.region}:${local.account_id}:function/${local.lambda_function_name}"
+  }
+}
 
 inputs = {
   role_name = "${local.assignment_prefix}-${local.parent_folder_name}"
@@ -88,14 +104,51 @@ EOF
           Action = [
             "kms:Encrypt",
             "kms:Decrypt",
-            "kms:ReEncrypt*",
-            "kms:GenerateDataKey*",
-            "kms:DescribeKey"
+            "kms:GenerateDataKey",
+            "kms:DescribeKey",
+            "kms:ListKeys"
           ],
           Resource = [
             dependency.kms_terraform_state.outputs.key_arn,
             dependency.kms_sops.outputs.key_arn
           ]
+        }
+      ]
+    },
+    ECRAccess = {
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "ecr:GetAuthorizationToken"
+          ],
+          Resource = "*"
+        },
+        {
+          Effect = "Allow",
+          Action = [
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:PutImage",
+            "ecr:InitiateLayerUpload",
+            "ecr:UploadLayerPart",
+            "ecr:CompleteLayerUpload"
+          ],
+          Resource = dependency.ecr_order_retrieval.outputs.repository_arn
+        }
+      ]
+    },
+    LambdaDeploy = {
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "lambda:GetFunction",
+            "lambda:UpdateFunctionCode"
+          ],
+          Resource = dependency.lambda_order_retrieval.outputs.function_arn
         }
       ]
     }
