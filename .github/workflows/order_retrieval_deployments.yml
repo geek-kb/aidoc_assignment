@@ -22,7 +22,7 @@ jobs:
     env:
       AWS_REGION: "eu-west-1"
       ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      TERRAGRUNT_WORKING_DIR: "${{ env.GITHUB_WORKSPACE }}/terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval"
+      TERRAGRUNT_WORKING_DIR: "${{ github.workspace }}/terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval"
 
     steps:
       - name: Checkout repository
