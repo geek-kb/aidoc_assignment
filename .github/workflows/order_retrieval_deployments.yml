@@ -114,7 +114,7 @@ jobs:
         id: assume-state-role
         run: |
           STATE_CREDENTIALS=$(aws sts assume-role \
-            --role-arn "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/terraform-state-access-role" \
+            --role-arn "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/aidoc-devops2-ex-state-manager" \
             --role-session-name "TerraformStateAccess")
           
           # Store original credentials
