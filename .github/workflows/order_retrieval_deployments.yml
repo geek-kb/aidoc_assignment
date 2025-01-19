@@ -32,23 +32,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
 
-    env:
-      AWS_REGION: "eu-west-1"
-      ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      ECR_REPO: "order-retrieval"
-      LAMBDA_FUNCTION_NAME: "order-retrieval"
-      IMAGE_TAG: "latest"
-      TG_DIR: "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval"
-      MD5_FILE: "${{ env.TG_DIR }}/lambda_code.md5"
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Configure Environment Variables
         run: |
-          echo "TG_DIR=terraform/states/environments/aws/my-aws-account/${AWS_REGION}/dev-ireland-1/lambda/order-retrieval" >> $GITHUB_ENV
-          echo "MD5_FILE=$env.TG_DIR }}/lambda_code.md5" >> $GITHUB_ENV
+          echo "MD5_FILE=$TG_DIR/lambda_code.md5" >> $GITHUB_ENV
 
       - name: Install Terraform & Terragrunt
         run: |
@@ -132,7 +122,7 @@ jobs:
         if: env.CODE_CHANGED == 'true'
         run: |
           docker build -t ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
-            .${{ env.TG_DIR }}/lambda_source_code
+            ./${{ env.TG_DIR }}/lambda_source_code
           docker tag ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
             ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
