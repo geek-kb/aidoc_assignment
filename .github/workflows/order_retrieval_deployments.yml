@@ -137,7 +137,7 @@ jobs:
             backend = "s3"
             generate = {
               path      = "backend.tf"
-              if_exists = "overwrite"
+              if_exists = "overwrite_terragrunt"
             }
             config = {
               bucket         = "aidoc-devops2-ex-terraform-state-l9bsj3h"
