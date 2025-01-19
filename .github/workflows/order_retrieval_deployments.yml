@@ -110,6 +110,35 @@ jobs:
           echo "IMAGE_URI=${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}@${IMAGE_DIGEST}" >> $GITHUB_ENV
           echo "Image Digest: ${IMAGE_DIGEST}"
 
+      - name: Assume Terraform State Access Role
+        id: assume-state-role
+        run: |
+          STATE_CREDENTIALS=$(aws sts assume-role \
+            --role-arn "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/terraform-state-access-role" \
+            --role-session-name "TerraformStateAccess")
+          
+          # Store original credentials
+          echo "ORIGINAL_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
+          echo "ORIGINAL_AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
+          echo "ORIGINAL_AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> $GITHUB_ENV
+          
+          # Set state access credentials
+          echo "AWS_ACCESS_KEY_ID=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
+
+      - name: Validate Terraform Code
+        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
+        run: |
+          terragrunt run-all validate
+          
+      # After state operations, restore original credentials
+      - name: Restore Original Credentials
+        run: |
+          echo "AWS_ACCESS_KEY_ID=$ORIGINAL_AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$ORIGINAL_AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$ORIGINAL_AWS_SESSION_TOKEN" >> $GITHUB_ENV
+
       - name: Validate Terraform Code
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
