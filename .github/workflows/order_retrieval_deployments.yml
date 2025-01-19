@@ -30,7 +30,7 @@ jobs:
       LAMBDA_FUNCTION_NAME: "order-retrieval"
       IMAGE_TAG: "latest"
       TG_DIR: "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval"
-      MD5_FILE: "${{ env.TG_DIR }}/lambda_code.md5"
+      MD5_FILE: "$TG_DIR/lambda_code.md5"
 
     steps:
       - name: Checkout repository
@@ -86,7 +86,7 @@ jobs:
       - name: Compute MD5 Hash of Lambda Code
         id: compute-md5
         run: |
-          NEW_MD5=$(find ${{ env.TG_DIR }}/lambda_source_code -type f -exec md5sum {} + | sort | md5sum | awk '{ print $1 }')
+          NEW_MD5=$(find $TG_DIR/lambda_source_code -type f -exec md5sum {} + | sort | md5sum | awk '{ print $1 }')
           echo "NEW_MD5=${NEW_MD5}" >> $GITHUB_ENV
           
           if [[ -f "${{ env.MD5_FILE }}" ]]; then
