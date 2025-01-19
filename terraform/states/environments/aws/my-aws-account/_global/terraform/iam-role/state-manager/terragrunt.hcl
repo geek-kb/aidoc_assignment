@@ -124,17 +124,21 @@ EOF
             "s3:PutBucketVersioning",
             "s3:PutEncryptionConfiguration",
             "s3:PutBucketAcl",
-            "s3:PutBucketLogging"
+            "s3:PutBucketLogging",
+            "s3:ListBucket",
+            "s3:GetBucketVersioning",
+            "s3:GetObject"
           ],
-          "Resource" : "${dependency.s3_state.outputs.s3_bucket_arn}"
+          "Resource" : "arn:aws:s3:::terraform-state-l9bsjdh"
         },
         {
           "Effect" : "Allow",
           "Action" : [
             "s3:GetObject",
-            "s3:PutObject"
+            "s3:PutObject",
+            "s3:GetObjectAcl"
           ],
-          "Resource" : "${dependency.s3_state.outputs.s3_bucket_arn}/*"
+          "Resource" : "arn:aws:s3:::terraform-state-l9bsjdh/*"
         }
       ]
     }
