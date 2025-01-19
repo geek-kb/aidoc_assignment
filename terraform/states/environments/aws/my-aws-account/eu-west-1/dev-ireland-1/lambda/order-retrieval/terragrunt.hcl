@@ -71,7 +71,7 @@ inputs = {
   }
 
   lambda_environment = {
-    API_KEY       = "7f3b9e2a-4c1d-41a6-99e8-d5a7b12f4c6e"
+    API_KEY       = "7f3b9e2a-4c1d-41a6-99e8-d5a7b12f4c3e"
     SQS_QUEUE_URL = "${dependency.sqs_queue.outputs.sqs_queue_url}"
   }
 }
