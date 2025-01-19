@@ -132,36 +132,20 @@ jobs:
         id: backend
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
-          echo "pwd: $(pwd)"
-          cat > providers.tf << EOF
-          terraform {
-            required_providers {
-              aws = {
-                source  = "hashicorp/aws"
-                version = ">= 5.84.0, < 6.0.0"
-              }
-              sops = {
-                source  = "carlpett/sops"
-                version = ">= 0.7.2"
-              }
-            }
-          }
-          EOF
-          cat > backend.tf << EOF
+          cat <<EOF > ./terragrunt.hcl
           remote_state {
-            backend = "s3" {
-              generate = {
-                path = "backend.tf"
-                if_exists = "overwrite"
-              }
-              config = {
-                bucket = "aidoc-devops2-ex-terraform-state-l9bsj3h"
-                key    = "${path_relative_to_include()}/terraform.tfstate"
-                region = "eu-west-1"
-                kms_key_id  = "arn:aws:kms:eu-west-1:912466608750:key/0544f8e2-f4a6-4b64-8466-fdf76d6e96be"
-                dynamodb_table = "aidoc-devops2-ex-terraform-state-locks"
-                encrypt = true
-              }
+            backend = "s3"
+            generate = {
+              path      = "backend.tf"
+              if_exists = "overwrite"
+            }
+            config = {
+              bucket         = "aidoc-devops2-ex-terraform-state-l9bsj3h"
+              key            = "\${path_relative_to_include()}/terraform.tfstate"
+              region         = "eu-west-1"
+              kms_key_id     = "arn:aws:kms:eu-west-1:***:key/0544f8e2-f4a6-4b64-8466-fdf76d6e96be"
+              dynamodb_table = "aidoc-devops2-ex-terraform-state-locks"
+              encrypt        = true
             }
           }
           EOF
