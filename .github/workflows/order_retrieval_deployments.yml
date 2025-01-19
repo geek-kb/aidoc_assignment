@@ -7,7 +7,8 @@ on:
     paths:
       - "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/**"
       - ".github/workflows/order_retrieval_deployments.yml"
-
+  workflow_dispatch:
+    
 permissions:
   id-token: write
   contents: read
