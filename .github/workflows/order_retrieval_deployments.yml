@@ -202,7 +202,7 @@ jobs:
             lambda-md5-hash-
 
       - name: Compare MD5 hash
-        id: check-hash
+        id: check-hash-again
         run: |
           if [ -f md5sum.txt ]; then
             OLD_MD5=$(cat md5sum.txt | awk '{ print $1 }')
