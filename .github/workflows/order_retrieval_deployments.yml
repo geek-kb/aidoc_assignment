@@ -29,7 +29,7 @@ jobs:
       ECR_REPO: "order-retrieval"
       LAMBDA_FUNCTION_NAME: "order-retrieval"
       IMAGE_TAG: "latest"
-      TG_DIR: "terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval"
+
 
     steps:
       - name: Checkout repository
@@ -133,7 +133,8 @@ jobs:
         id: backend
         working-directory: ${{ env.TG_DIR }}
         run: |
-          cat <<EOF >${{ env.TG_DIR }}/backend.tf
+          echo "TG_DIR=terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval" >> $GITHUB_ENV
+          cat <<EOF >$env.TG_DIR/backend.tf
           remote_state {
             backend = "s3"
             generate = {
@@ -156,7 +157,7 @@ jobs:
 
 
       - name: Validate Terraform Code
-        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
+        working-directory: ${{ env.TG_DIR }}
         run: |
           terragrunt validate --terragrunt-non-interactive
           
