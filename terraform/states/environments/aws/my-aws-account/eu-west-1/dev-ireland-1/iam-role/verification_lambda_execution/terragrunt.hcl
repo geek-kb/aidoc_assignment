@@ -20,6 +20,7 @@ locals {
   triggering_bucket_name             = "ordering-system"
   bucket_directory_and_db_table_name = "orders"
   sqs_queue_name                     = "order-processor"
+  function_name                      = "order_verification"
 
   assignment_prefix = "aidoc-devops2-ex"
 }
@@ -130,7 +131,7 @@ inputs = {
             "logs:CreateLogStream",
             "logs:PutLogEvents"
           ],
-          "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.assignment_prefix}-${local.parent_folder_name}:*"
+          "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.function_name}:*"
         }
       ]
     }
