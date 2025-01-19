@@ -154,7 +154,7 @@ jobs:
       - name: Validate Terraform Code
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
-          terragrunt run-all validate --terragrunt-non-interactive --terragrunt-include-external-dependencies
+          terragrunt run-all validate --terragrunt-non-interactive --terragrunt-ignore-external-dependencies
           
       # After state operations, restore original credentials
       - name: Restore Original Credentials
