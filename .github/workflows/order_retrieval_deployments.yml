@@ -29,36 +29,36 @@ jobs:
       ECR_REPO: "order-retrieval"
       LAMBDA_FUNCTION_NAME: "order-retrieval"
       IMAGE_TAG: "latest"
+      TG_DIR: "terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval"
+      MD5_FILE: "${{ env.TG_DIR }}/lambda_code.md5"
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Configure Environment Variables
+        run: |
+          echo "TG_DIR=terraform/states/environments/aws/my-aws-account/${AWS_REGION}/dev-ireland-1/lambda/order-retrieval" >> $GITHUB_ENV
+          echo "MD5_FILE=${{ env.TG_DIR }}/lambda_code.md5" >> $GITHUB_ENV
+
       - name: Install Terraform & Terragrunt
         run: |
-          # Create temp directory
           TEMP_DIR=$(mktemp -d)
           cd $TEMP_DIR
           
-          # Download Terraform
           curl -LO https://releases.hashicorp.com/terraform/1.5.5/terraform_1.5.5_linux_amd64.zip
           unzip -o terraform_1.5.5_linux_amd64.zip
           
-          # Download Terragrunt
           curl -LO https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.12/terragrunt_linux_amd64
           
-          # Safe removal of existing installations
           sudo rm -f /usr/local/bin/terraform /usr/local/bin/terragrunt
           
-          # Install binaries
           sudo install -o root -g root -m 0755 terraform /usr/local/bin/terraform
           sudo install -o root -g root -m 0755 terragrunt_linux_amd64 /usr/local/bin/terragrunt
           
-          # Verify installations
           terraform version
           terragrunt --version
           
-          # Cleanup
           cd -
           rm -rf $TEMP_DIR
 
@@ -68,44 +68,68 @@ jobs:
           role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/aidoc-devops2-ex-github-oidc-auth
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Assume `github-actions-workflows` Role Securely
+      - name: Assume `github-actions-workflows` Role
         id: assume-role
         run: |
           CREDENTIALS=$(aws sts assume-role \
             --role-arn "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/aidoc-devops2-ex-github-actions-workflows" \
             --role-session-name "GitHubActionsSession")
 
-          # Masking Secrets in Logs
           echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')"
           echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')"
           echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')"
 
-          # Export Variables Securely
           echo "AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
 
+      - name: Compute MD5 Hash of Lambda Code
+        id: compute-md5
+        run: |
+          NEW_MD5=$(find ${{ env.TG_DIR }}/lambda_source_code -type f -exec md5sum {} + | sort | md5sum | awk '{ print $1 }')
+          echo "NEW_MD5=${NEW_MD5}" >> $GITHUB_ENV
+          
+          if [[ -f "${{ env.MD5_FILE }}" ]]; then
+            OLD_MD5=$(cat "${{ env.MD5_FILE }}")
+            echo "OLD_MD5=${OLD_MD5}" >> $GITHUB_ENV
+          else
+            OLD_MD5="none"
+          fi
+          
+          echo "New MD5: ${NEW_MD5}"
+          echo "Old MD5: ${OLD_MD5}"
+
+      - name: Check if Code Has Changed
+        id: check-md5
+        run: |
+          if [[ "${{ env.NEW_MD5 }}" == "${{ env.OLD_MD5 }}" ]]; then
+            echo "CODE_CHANGED=false" >> $GITHUB_ENV
+          else
+            echo "CODE_CHANGED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Save New MD5 Hash
+        if: env.CODE_CHANGED == 'true'
+        run: |
+          echo "${{ env.NEW_MD5 }}" > ${{ env.MD5_FILE }}
+
       - name: Login to Amazon ECR
+        if: env.CODE_CHANGED == 'true'
         run: |
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
           docker login --username AWS --password-stdin ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
-      - name: Check if lambda code had been updated
-        id: check-code-update
-        run: |
-          echo "$(cat terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval/lambda_source_code/order_retrieval.py | md5sum)" > function_code_hash
-          echo "Code Updated: $?"
-
       - name: Build and Push Docker image
+        if: env.CODE_CHANGED == 'true'
         run: |
-          echo 
           docker build -t ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
-            ./terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval/lambda_source_code
+            .${{ env.TG_DIR }}/lambda_source_code
           docker tag ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
             ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
 
       - name: Retrieve Latest ECR Image Digest
+        if: env.CODE_CHANGED == 'true'
         id: get-ecr-digest
         run: |
           IMAGE_DIGEST=$(aws ecr describe-images \
@@ -118,73 +142,20 @@ jobs:
           echo "IMAGE_URI=${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}@${IMAGE_DIGEST}" >> $GITHUB_ENV
           echo "Image Digest: ${IMAGE_DIGEST}"
 
-      - name: Assume Terraform State Access Role
-        id: assume-state-role
-        run: |
-          STATE_CREDENTIALS=$(aws sts assume-role \
-            --role-arn "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/aidoc-devops2-ex-state-manager" \
-            --role-session-name "TerraformStateAccess")
-          
-          # Store original credentials
-          echo "ORIGINAL_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
-          echo "ORIGINAL_AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
-          echo "ORIGINAL_AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> $GITHUB_ENV
-          
-          # Set state access credentials
-          echo "AWS_ACCESS_KEY_ID=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
-          echo "AWS_SESSION_TOKEN=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
-
-      - name: Configure backend.tf
-        id: backend
-        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
-        run: |
-          cat <<EOF > backend.tf
-          remote_state {
-            backend = "s3"
-            generate = {
-              path      = "backend.tf"
-              if_exists = "overwrite_terragrunt"
-            }
-            config = {
-              bucket         = "aidoc-devops2-ex-terraform-state-l9bsj3h"
-              key            = "\${path_relative_to_include()}/terraform.tfstate"
-              region         = "eu-west-1"
-              kms_key_id     = "arn:aws:kms:eu-west-1:***:key/0544f8e2-f4a6-4b64-8466-fdf76d6e96be"
-              dynamodb_table = "aidoc-devops2-ex-terraform-state-locks"
-              encrypt        = true
-            }
-          }
-          EOF
-          cat backend.tf
-          ls -l
-          echo "pwd: $(pwd)"
-          
       - name: Validate Terraform Code
-        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
+        working-directory: ${{ env.TG_DIR }}
         run: |
           terragrunt run-all validate --terragrunt-non-interactive --terragrunt-ignore-external-dependencies
-          
-      # After state operations, restore original credentials
-      - name: Restore Original Credentials
-        run: |
-          echo "AWS_ACCESS_KEY_ID=$ORIGINAL_AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=$ORIGINAL_AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
-          echo "AWS_SESSION_TOKEN=$ORIGINAL_AWS_SESSION_TOKEN" >> $GITHUB_ENV
-
-      - name: Validate Terraform Code
-        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
-        run: |
-          find . -type f -name providers.tf | xargs cat
-          terragrunt run-all validate --terragrunt-non-interactive
 
       - name: Update Terragrunt Configuration
-        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
+        working-directory: ${{ env.TG_DIR }}
         run: |
-          sed -i "s|image_uri = .*|image_uri = \"${{ env.IMAGE_URI }}\"|" terragrunt.hcl
+          if [[ "${{ env.CODE_CHANGED }}" == "true" ]]; then
+            sed -i "s|image_uri = .*|image_uri = \"${{ env.IMAGE_URI }}\"|" terragrunt.hcl
+          fi
           cat terragrunt.hcl
 
       - name: Apply Terraform Changes with Terragrunt
-        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
+        working-directory: ${{ env.TG_DIR }}
         run: |
           terragrunt run-all apply --auto-approve
