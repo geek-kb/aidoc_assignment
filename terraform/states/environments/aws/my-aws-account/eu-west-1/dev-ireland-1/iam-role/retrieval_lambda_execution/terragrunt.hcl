@@ -113,7 +113,7 @@ inputs = {
             "logs:CreateLogStream",
             "logs:PutLogEvents"
           ],
-          "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.assignment_prefix}-${local.parent_folder_name}:*"
+          "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.parent_folder_name}:*"
         },
         {
           "Effect" : "Allow",
@@ -167,7 +167,9 @@ inputs = {
         {
           "Effect" : "Allow",
           "Action" : [
-            "sqs:SendMessage"
+            "sqs:SendMessage",
+            "sqs:receivemessage",
+            "sqs:deletemessage"
           ],
           "Resource" : "${dependency.sqs_order_processor.outputs.sqs_queue_arn}"
         }
