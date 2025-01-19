@@ -85,6 +85,35 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
 
+      - name: Compute new MD5 hash of Lambda source code
+        run: |
+          md5sum ${{ env.LAMBDA_MODULE_PATH }}/lambda_source_code/order_retrieval.py > md5sum_new.txt
+          echo "NEW_MD5=$(cat md5sum_new.txt | awk '{ print $1 }')" >> $GITHUB_ENV
+
+      - name: Restore previous MD5 hash
+        id: cache-md5
+        uses: actions/cache@v3
+        with:
+          path: md5sum.txt
+          key: lambda-md5-hash-${{ github.sha }}
+          restore-keys: |
+            lambda-md5-hash-
+
+      - name: Compare MD5 hash
+        id: check-hash
+        run: |
+          if [ -f md5sum.txt ]; then
+            OLD_MD5=$(cat md5sum.txt | awk '{ print $1 }')
+            if [ "$OLD_MD5" = "$NEW_MD5" ]; then
+              echo "No changes detected. Skipping image build."
+              echo "SKIP_BUILD=true" >> $GITHUB_ENV
+            else
+              echo "Changes detected. Proceeding with build."
+            fi
+          else
+            echo "No previous hash found. Proceeding with build."
+          fi
+
       - name: Login to Amazon ECR
         run: |
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
@@ -157,3 +186,32 @@ jobs:
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
           terragrunt run-all apply --auto-approve
+
+      - name: Compute new MD5 hash of Lambda source code
+        run: |
+          md5sum ${{ env.LAMBDA_MODULE_PATH }}/lambda_source_code/order_retrieval.py > md5sum_new.txt
+          echo "NEW_MD5=$(cat md5sum_new.txt | awk '{ print $1 }')" >> $GITHUB_ENV
+
+      - name: Restore previous MD5 hash
+        id: cache-md5
+        uses: actions/cache@v3
+        with:
+          path: md5sum.txt
+          key: lambda-md5-hash-${{ github.sha }}
+          restore-keys: |
+            lambda-md5-hash-
+
+      - name: Compare MD5 hash
+        id: check-hash
+        run: |
+          if [ -f md5sum.txt ]; then
+            OLD_MD5=$(cat md5sum.txt | awk '{ print $1 }')
+            if [ "$OLD_MD5" = "$NEW_MD5" ]; then
+              echo "No changes detected. Skipping image build."
+              echo "SKIP_BUILD=true" >> $GITHUB_ENV
+            else
+              echo "Changes detected. Proceeding with build."
+            fi
+          else
+            echo "No previous hash found. Proceeding with build."
+          fi
