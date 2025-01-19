@@ -29,6 +29,7 @@ jobs:
       ECR_REPO: "order-retrieval"
       LAMBDA_FUNCTION_NAME: "order-retrieval"
       IMAGE_TAG: "latest"
+      TG_DIR: "terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval"
 
     steps:
       - name: Checkout repository
@@ -130,9 +131,9 @@ jobs:
 
       - name: Configure backend.tf
         id: backend
-        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
+        working-directory: ${{ env.TG_DIR }}
         run: |
-          cat <<EOF > ./backend.tf
+          cat <<EOF >${{ env.TG_DIR }}/backend.tf
           remote_state {
             backend = "s3"
             generate = {
@@ -150,11 +151,14 @@ jobs:
           }
           EOF
           cat backend.tf
+          ls -l
+          echo "pwd: $(pwd)"
+
 
       - name: Validate Terraform Code
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
-          terragrunt run-all validate --terragrunt-non-interactive --terragrunt-ignore-external-dependencies
+          terragrunt validate --terragrunt-non-interactive
           
       # After state operations, restore original credentials
       - name: Restore Original Credentials
