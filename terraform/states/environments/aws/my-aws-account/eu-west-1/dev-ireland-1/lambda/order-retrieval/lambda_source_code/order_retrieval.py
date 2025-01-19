@@ -24,16 +24,17 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 
 # AWS environment variables
 SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL")
-API_KEY = get_api_key()
+API_KEY = os.getenv("API_KEY")
+
 
 # AWS SQS client
 sqs = boto3.client('sqs')
 ssm = boto3.client('ssm')
 parameter_name = os.getenv("SSM_API_KEY")
 
-def get_api_key():
-    response = ssm.get_parameter(Name=parameter_name, WithDecryption=True)
-    return response['Parameter']['Value']
+# def get_api_key():
+#     response = ssm.get_parameter(Name=parameter_name, WithDecryption=True)
+#     return response['Parameter']['Value']
 
 @app.route('/process', methods=['POST'])
 def process_order():
