@@ -148,7 +148,8 @@ jobs:
           }
           EOF
           cat > backend.tf << EOF
-            backend "s3" {
+          remote_state {
+            backend = "s3" {
               generate = {
                 path = "backend.tf"
                 if_exists = "overwrite"
@@ -160,13 +161,13 @@ jobs:
                 kms_key_id  = "arn:aws:kms:eu-west-1:912466608750:key/0544f8e2-f4a6-4b64-8466-fdf76d6e96be"
                 dynamodb_table = "aidoc-devops2-ex-terraform-state-locks"
                 encrypt = true
-                }
               }
             }
+          }
           EOF
           cat providers.tf
           cat backend.tf
-          
+
       - name: Validate Terraform Code
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
