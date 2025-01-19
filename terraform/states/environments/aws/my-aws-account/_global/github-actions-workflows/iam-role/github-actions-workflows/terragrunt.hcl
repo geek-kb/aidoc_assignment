@@ -18,7 +18,7 @@ locals {
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
 
   assignment_prefix    = "aidoc-devops2-ex"
-  lambda_function_name = "order-retrieval"
+  lambda_function_name = "order_retrieval"
 }
 
 terraform {
@@ -60,7 +60,7 @@ dependency "iam_role_github_oidc_auth" {
 }
 
 dependency "ecr_order_retrieval" {
-  config_path = "../../../../eu-west-1/dev-ireland-1/ecr/order-retrieval"
+  config_path = "../../../../${local.region}/dev-ireland-1/ecr/order-retrieval"
 
   mock_outputs = {
     repository_arn = "arn:aws:ecr:${local.region}:${local.account_id}:repository/order-retrieval"
@@ -68,7 +68,15 @@ dependency "ecr_order_retrieval" {
 }
 
 dependency "lambda_order_retrieval" {
-  config_path = "../../../../eu-west-1/dev-ireland-1/lambda/order-retrieval"
+  config_path = "../../../../${local.region}/dev-ireland-1/lambda/order-retrieval"
+
+  mock_outputs = {
+    function_arn = "arn:aws:lambda:${local.region}:${local.account_id}:function/${local.lambda_function_name}"
+  }
+}
+
+dependency "lambda_order_verification" {
+  config_path = "../../../../${local.region}/dev-ireland-1/lambda/order-verification"
 
   mock_outputs = {
     function_arn = "arn:aws:lambda:${local.region}:${local.account_id}:function/${local.lambda_function_name}"
@@ -148,7 +156,7 @@ EOF
             "lambda:GetFunction",
             "lambda:UpdateFunctionCode"
           ],
-          Resource = dependency.lambda_order_retrieval.outputs.function_arn
+          Resource = dependency.lambda_order_retrieval.outputs.lambda_arn
         }
       ]
     }
