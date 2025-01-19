@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/**"
-      - ""
+      - "terraform/modules/lambda/**"
       - ".github/workflows/order_retrieval_deployments.yml"
 
 permissions:
@@ -22,9 +22,7 @@ jobs:
     env:
       AWS_REGION: "eu-west-1"
       ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      ECR_REPO: "order-retrieval"
-      LAMBDA_FUNCTION_NAME: "order_retrieval"
-      IMAGE_TAG: "latest"
+      TERRAGRUNT_WORKING_DIR: "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval"
 
     steps:
       - name: Checkout repository
@@ -53,24 +51,21 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
 
-      - name: Login to Amazon ECR
+      - name: Install Terragrunt
         run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-          docker login --username AWS --password-stdin ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          curl -LO https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_linux_amd64
+          chmod +x terragrunt_linux_amd64
+          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+          terragrunt --version
 
-      - name: Build Docker image
+      - name: Validate Terraform Configuration
+        working-directory: ${{ env.TERRAGRUNT_WORKING_DIR }}
         run: |
-          docker build -t ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
-            ./terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval/lambda_source_code
-          docker tag ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
-            ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
+          echo "Running Terragrunt plan for validation..."
+          terragrunt run-all plan --terragrunt-non-interactive
+        continue-on-error: false
 
-      - name: Push to Amazon ECR
+      - name: Deploy Order Retrieval Lambda with Terragrunt
+        working-directory: ${{ env.TERRAGRUNT_WORKING_DIR }}
         run: |
-          docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
-
-      - name: Deploy Lambda function
-        run: |
-          aws lambda update-function-code \
-            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
-            --image-uri ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
+          terragrunt run-all apply --auto-approve
