@@ -38,6 +38,9 @@ jobs:
           # Download and install Terraform 1.5.5
           curl -LO https://releases.hashicorp.com/terraform/1.5.5/terraform_1.5.5_linux_amd64.zip
           unzip -o terraform_1.5.5_linux_amd64.zip
+      
+          # Remove any existing terraform binary if it's a directory
+          sudo rm -rf /usr/local/bin/terraform
           sudo mv terraform /usr/local/bin/
       
           # Download and install Terragrunt v0.45.12
