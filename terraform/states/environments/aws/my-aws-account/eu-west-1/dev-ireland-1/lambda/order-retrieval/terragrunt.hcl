@@ -45,14 +45,6 @@ dependency "ecr_repository" {
   }
 }
 
-dependency "dynamodb_table" {
-  config_path = "../../dynamodb/orders"
-
-  mock_outputs = {
-    table_name = "orders"
-  }
-}
-
 dependency "sqs_queue" {
   config_path = "../../sqs/order-processor"
 
@@ -79,7 +71,7 @@ inputs = {
   }
 
   lambda_environment = {
-    DYNAMODB_TABLE_NAME = "orders"
-    SQS_QUEUE_URL       = "${dependency.sqs_queue.outputs.sqs_queue_url}"
+    API_KEY       = "7f3b9e2a-4c1d-41a6-99e8-d5a7b12f4c6e"
+    SQS_QUEUE_URL = "${dependency.sqs_queue.outputs.sqs_queue_url}"
   }
 }
