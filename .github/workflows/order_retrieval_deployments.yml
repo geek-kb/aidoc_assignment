@@ -12,6 +12,10 @@ permissions:
   id-token: write
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   deploy:
     name: Deploy Order Retrieval
@@ -29,14 +33,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Terraform 1.5.5 and Terragrunt
+      - name: Install Terraform & Terragrunt
         run: |
+          # Download and install Terraform 1.5.5
           curl -LO https://releases.hashicorp.com/terraform/1.5.5/terraform_1.5.5_linux_amd64.zip
-          unzip terraform_1.5.5_linux_amd64.zip
+          unzip -o terraform_1.5.5_linux_amd64.zip
           sudo mv terraform /usr/local/bin/
+      
+          # Download and install Terragrunt v0.45.12
           curl -LO https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.12/terragrunt_linux_amd64
           chmod +x terragrunt_linux_amd64
           sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+      
+          # Verify installation
           terraform -version
           terragrunt -version
 
