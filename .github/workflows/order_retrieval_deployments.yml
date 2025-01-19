@@ -29,7 +29,6 @@ jobs:
       ECR_REPO: "order-retrieval"
       LAMBDA_FUNCTION_NAME: "order-retrieval"
       IMAGE_TAG: "latest"
-      TG_DIR: "terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval"
       MD5_FILE: "${{ env.TG_DIR }}/lambda_code.md5"
 
     steps:
