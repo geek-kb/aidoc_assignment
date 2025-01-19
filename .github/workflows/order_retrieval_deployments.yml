@@ -130,6 +130,8 @@ jobs:
 
       - name: Test
         run: |
+          sudo apt update
+          sudo apt install -y mlocate
           sudo updatedb
           terragrunt init -reconfigure
           locate providers.tf
