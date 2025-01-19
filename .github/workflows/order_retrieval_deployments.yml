@@ -141,6 +141,48 @@ jobs:
           echo "IMAGE_URI=${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}@${IMAGE_DIGEST}" >> $GITHUB_ENV
           echo "Image Digest: ${IMAGE_DIGEST}"
 
+      - name: Assume Terraform State Access Role
+        id: assume-state-role
+        run: |
+          STATE_CREDENTIALS=$(aws sts assume-role \
+            --role-arn "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/aidoc-devops2-ex-state-manager" \
+            --role-session-name "TerraformStateAccess")
+          
+          # Store original credentials
+          echo "ORIGINAL_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
+          echo "ORIGINAL_AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
+          echo "ORIGINAL_AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> $GITHUB_ENV
+          
+          # Set state access credentials
+          echo "AWS_ACCESS_KEY_ID=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
+
+      - name: Configure backend.tf
+        id: backend
+        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
+        run: |
+          cat <<EOF > backend.tf
+          remote_state {
+            backend = "s3"
+            generate = {
+              path      = "backend.tf"
+              if_exists = "overwrite_terragrunt"
+            }
+            config = {
+              bucket         = "aidoc-devops2-ex-terraform-state-l9bsj3h"
+              key            = "\${path_relative_to_include()}/terraform.tfstate"
+              region         = "eu-west-1"
+              kms_key_id     = "arn:aws:kms:eu-west-1:***:key/0544f8e2-f4a6-4b64-8466-fdf76d6e96be"
+              dynamodb_table = "aidoc-devops2-ex-terraform-state-locks"
+              encrypt        = true
+            }
+          }
+          EOF
+          cat backend.tf
+          ls -l
+          echo "pwd: $(pwd)"
+
       - name: Validate Terraform Code
         working-directory: ${{ env.TG_DIR }}
         run: |
