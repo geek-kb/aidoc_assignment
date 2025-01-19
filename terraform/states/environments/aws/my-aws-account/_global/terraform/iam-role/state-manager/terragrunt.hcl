@@ -61,6 +61,15 @@ inputs = {
     {
       "Effect": "Allow",
       "Principal": {
+        "AWS": [
+          "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-actions-workflows"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
         "Federated": "arn:aws:iam::${local.account_id}:oidc-provider/token.actions.githubusercontent.com"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
