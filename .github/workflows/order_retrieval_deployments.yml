@@ -39,7 +39,7 @@ jobs:
       - name: Configure Environment Variables
         run: |
           echo "TG_DIR=terraform/states/environments/aws/my-aws-account/${AWS_REGION}/dev-ireland-1/lambda/order-retrieval" >> $GITHUB_ENV
-          echo "MD5_FILE=${{ env.TG_DIR }}/lambda_code.md5" >> $GITHUB_ENV
+          echo "MD5_FILE=$TG_DIR/lambda_code.md5" >> $GITHUB_ENV
 
       - name: Install Terraform & Terragrunt
         run: |
