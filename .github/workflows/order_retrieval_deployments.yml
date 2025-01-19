@@ -130,6 +130,7 @@ jobs:
 
       - name: Test
         run: |
+          cd terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
           sudo apt install plocate -y
           sudo updatedb
           terragrunt init -reconfigure
