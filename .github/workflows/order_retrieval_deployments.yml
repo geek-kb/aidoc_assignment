@@ -34,6 +34,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup
+        run: |
+          echo "AWS_REGION=${AWS_REGION}" >> $GITHUB_ENV
+          echo "ACCOUNT_ID=${ACCOUNT_ID}" >> $GITHUB_ENV
+          echo "ECR_REPO=${ECR_REPO}" >> $GITHUB_ENV
+          echo "LAMBDA_FUNCTION_NAME=${LAMBDA_FUNCTION_NAME}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+          echo "TG_DIR=terraform/states/environments/aws/my-aws-account/${AWS_REGION}/dev-ireland-1/lambda/order-retrieval" >> $GITHUB_ENV
+
       - name: Install Terraform & Terragrunt
         run: |
           # Create temp directory
@@ -92,8 +101,9 @@ jobs:
 
       - name: Build and Push Docker image
         run: |
+          echo 
           docker build -t ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
-            ./terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval/lambda_source_code
+            .${{ env.TG_DIR }}/lambda_source_code
           docker tag ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
             ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
