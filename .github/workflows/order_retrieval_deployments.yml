@@ -145,8 +145,8 @@ jobs:
         id: assume-state-role
         run: |
           STATE_CREDENTIALS=$(aws sts assume-role \
-            --role-arn "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/aidoc-devops2-ex-state-manager" \
-            --role-session-name "TerraformStateAccess")
+            --role-arn "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/aidoc-devops2-ex-terraform" \
+            --role-session-name "TerraformAccess")
           
           # Store original credentials
           echo "ORIGINAL_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
