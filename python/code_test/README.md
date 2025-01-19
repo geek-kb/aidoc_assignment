@@ -53,6 +53,7 @@ Input order data: {
 ```
 
 ## Environment Variables
+
 | Name                 | Description    |        Default        |
 |:--------------------:|:--------------:|:---------------------:|
 | DYNAMODB_TABLE_NAME  | DynamoDB table | test-table            |
