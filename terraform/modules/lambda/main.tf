@@ -63,6 +63,8 @@ resource "aws_s3_object" "source-code-object" {
   bucket = var.s3_bucket_name
   key    = var.function_zip_filename
   source = data.archive_file.source-code-zip[0].output_path
+  source_hash = data.archive_file.source-code-zip.output_base64sha256
+  etag        = filemd5("${var.function_source_zip_path}")
 }
 
 # S3 Trigger Permissions
