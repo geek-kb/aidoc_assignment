@@ -128,15 +128,6 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
 
-      - name: Test
-        run: |
-          cd terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
-          sudo apt install plocate -y
-          sudo updatedb
-          terragrunt init -reconfigure
-          locate providers.tf
-          locate backend.tf
-
       - name: Validate Terraform Code
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
