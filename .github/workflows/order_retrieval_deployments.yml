@@ -30,7 +30,6 @@ jobs:
       LAMBDA_FUNCTION_NAME: "order-retrieval"
       IMAGE_TAG: "latest"
 
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -131,10 +130,9 @@ jobs:
 
       - name: Configure backend.tf
         id: backend
-        working-directory: ${{ env.TG_DIR }}
+        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
-          echo "TG_DIR=terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval" >> $GITHUB_ENV
-          cat <<EOF >$env.TG_DIR/backend.tf
+          cat <<EOF >/backend.tf
           remote_state {
             backend = "s3"
             generate = {
@@ -154,12 +152,11 @@ jobs:
           cat backend.tf
           ls -l
           echo "pwd: $(pwd)"
-
-
+          
       - name: Validate Terraform Code
-        working-directory: ${{ env.TG_DIR }}
+        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
-          terragrunt validate --terragrunt-non-interactive
+          terragrunt run-all validate --terragrunt-non-interactive --terragrunt-ignore-external-dependencies
           
       # After state operations, restore original credentials
       - name: Restore Original Credentials
@@ -172,7 +169,6 @@ jobs:
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
           find . -type f -name providers.tf | xargs cat
-          export TERRAGRUNT_DISABLE_BUCKET_UPDATE=true
           terragrunt run-all validate --terragrunt-non-interactive
 
       - name: Update Terragrunt Configuration
