@@ -124,6 +124,22 @@ EOF
         }
       ]
     },
+    KMS-Access = {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "kms:Encrypt",
+            "kms:Decrypt",
+            "kms:ReEncrypt*",
+            "kms:GenerateDataKey*",
+            "kms:DescribeKey"
+          ],
+          "Resource" : "*"
+        }
+      ]
+    },
     IAM-AssumeRole = {
       "Version" : "2012-10-17",
       "Statement" : [
@@ -137,7 +153,6 @@ EOF
       ]
     }
   }
-
   tags = {
     Environment = local.environment_name
     Project     = "ordering-system"

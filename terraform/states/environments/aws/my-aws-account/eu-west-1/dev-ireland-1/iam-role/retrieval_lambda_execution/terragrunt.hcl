@@ -111,7 +111,8 @@ inputs = {
           "Action" : [
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
-            "logs:PutLogEvents"
+            "logs:PutLogEvents",
+            "logs:DescribeLogStreams"
           ],
           "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.parent_folder_name}:*"
         },

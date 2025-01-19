@@ -62,6 +62,15 @@ inputs = {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
+          "arn:aws:iam::${local.account_id}:user/itaig"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
           "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-actions-workflows"
         ]
       },
@@ -124,21 +133,18 @@ EOF
             "s3:PutBucketVersioning",
             "s3:PutEncryptionConfiguration",
             "s3:PutBucketAcl",
-            "s3:PutBucketLogging",
-            "s3:ListBucket",
-            "s3:GetBucketVersioning",
-            "s3:GetObject"
+            "s3:PutBucketLogging"
           ],
-          "Resource" : "arn:aws:s3:::terraform-state-l9bsjdh"
+          "Resource" : "${dependency.s3_state.outputs.s3_bucket_arn}"
         },
         {
           "Effect" : "Allow",
           "Action" : [
             "s3:GetObject",
             "s3:PutObject",
-            "s3:GetObjectAcl"
+            "s3:GetObject"
           ],
-          "Resource" : "arn:aws:s3:::terraform-state-l9bsjdh/*"
+          "Resource" : "${dependency.s3_state.outputs.s3_bucket_arn}/*"
         }
       ]
     }
