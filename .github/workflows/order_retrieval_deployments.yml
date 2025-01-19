@@ -22,7 +22,7 @@ jobs:
     env:
       AWS_REGION: "eu-west-1"
       ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      TERRAGRUNT_WORKING_DIR: "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval"
+      TERRAGRUNT_WORKING_DIR: "${{ env.GITHUB_WORKSPACE }}/terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval"
 
     steps:
       - name: Checkout repository
@@ -50,6 +50,11 @@ jobs:
           echo "AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
+      
+      - name: Test
+        run: |
+          echo "TERRAGRUNT_WORKING_DIR: ${{ env.TERRAGRUNT_WORKING_DIR }}"
+          env
 
       - name: Install Terragrunt
         run: |
