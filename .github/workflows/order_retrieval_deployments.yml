@@ -132,7 +132,7 @@ jobs:
         id: backend
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
-          cat <<EOF >/backend.tf
+          cat <<EOF > backend.tf
           remote_state {
             backend = "s3"
             generate = {
