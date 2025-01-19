@@ -143,6 +143,7 @@ jobs:
       - name: Validate Terraform Code
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
+          find . -type f -name providers.tf | xargs cat
           export TERRAGRUNT_DISABLE_BUCKET_UPDATE=true
           terragrunt run-all validate --terragrunt-non-interactive
 
