@@ -128,6 +128,45 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
 
+      - name: Configure backend.tf
+        id: backend
+        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
+        run: |
+          echo "pwd: $(pwd)"
+          cat > providers.tf << EOF
+          terraform {
+            required_providers {
+              aws = {
+                source  = "hashicorp/aws"
+                version = ">= 5.84.0, < 6.0.0"
+              }
+              sops = {
+                source  = "carlpett/sops"
+                version = ">= 0.7.2"
+              }
+            }
+          }
+          EOF
+          cat > backend.tf << EOF
+            backend "s3" {
+              generate = {
+                path = "backend.tf"
+                if_exists = "overwrite"
+              }
+              config = {
+                bucket = "aidoc-devops2-ex-terraform-state-l9bsj3h"
+                key    = "${path_relative_to_include()}/terraform.tfstate"
+                region = "eu-west-1"
+                kms_key_id  = "arn:aws:kms:eu-west-1:912466608750:key/0544f8e2-f4a6-4b64-8466-fdf76d6e96be"
+                dynamodb_table = "aidoc-devops2-ex-terraform-state-locks"
+                encrypt = true
+                }
+              }
+            }
+          EOF
+          cat providers.tf
+          cat backend.tf
+          
       - name: Validate Terraform Code
         working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
