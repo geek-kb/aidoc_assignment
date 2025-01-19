@@ -35,22 +35,22 @@ jobs:
 
       - name: Install Terraform & Terragrunt
         run: |
-          # Download and install Terraform
+          # Create temp directory
+          TEMP_DIR=$(mktemp -d)
+          cd $TEMP_DIR
+          
+          # Download Terraform
           curl -LO https://releases.hashicorp.com/terraform/1.5.5/terraform_1.5.5_linux_amd64.zip
           unzip -o terraform_1.5.5_linux_amd64.zip
-      
-          # Clean up existing terraform installation
-          if [ -d "/usr/local/bin/terraform" ]; then
-            sudo rm -rf "/usr/local/bin/terraform"
-          elif [ -f "/usr/local/bin/terraform" ]; then
-            sudo rm -f "/usr/local/bin/terraform"
-          fi
           
-          # Install terraform
-          sudo install -o root -g root -m 0755 terraform /usr/local/bin/terraform
-          
-          # Install Terragrunt
+          # Download Terragrunt
           curl -LO https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.12/terragrunt_linux_amd64
+          
+          # Safe removal of existing installations
+          sudo rm -f /usr/local/bin/terraform /usr/local/bin/terragrunt
+          
+          # Install binaries
+          sudo install -o root -g root -m 0755 terraform /usr/local/bin/terraform
           sudo install -o root -g root -m 0755 terragrunt_linux_amd64 /usr/local/bin/terragrunt
           
           # Verify installations
@@ -58,7 +58,8 @@ jobs:
           terragrunt --version
           
           # Cleanup
-          rm terraform terraform_1.5.5_linux_amd64.zip terragrunt_linux_amd64
+          cd -
+          rm -rf $TEMP_DIR
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v2
