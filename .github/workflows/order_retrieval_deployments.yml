@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/**"
-      - "terraform/modules/lambda/**"
       - ".github/workflows/order_retrieval_deployments.yml"
 
 permissions:
@@ -22,11 +21,24 @@ jobs:
     env:
       AWS_REGION: "eu-west-1"
       ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      TERRAGRUNT_WORKING_DIR: "${{ github.workspace }}/terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval"
+      ECR_REPO: "order-retrieval"
+      LAMBDA_FUNCTION_NAME: "order-retrieval"
+      IMAGE_TAG: "latest"
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install Terraform 1.5.5 and Terragrunt
+        run: |
+          curl -LO https://releases.hashicorp.com/terraform/1.5.5/terraform_1.5.5_linux_amd64.zip
+          unzip terraform_1.5.5_linux_amd64.zip
+          sudo mv terraform /usr/local/bin/
+          curl -LO https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.12/terragrunt_linux_amd64
+          chmod +x terragrunt_linux_amd64
+          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+          terraform -version
+          terragrunt -version
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v2
@@ -50,27 +62,45 @@ jobs:
           echo "AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
-      
-      - name: Test
-        run: |
-          echo "TERRAGRUNT_WORKING_DIR: ${{ env.TERRAGRUNT_WORKING_DIR }}"
-          env
 
-      - name: Install Terragrunt
+      - name: Login to Amazon ECR
         run: |
-          curl -LO https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_linux_amd64
-          chmod +x terragrunt_linux_amd64
-          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
-          terragrunt --version
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
-      - name: Validate Terraform Configuration
-        working-directory: ${{ env.TERRAGRUNT_WORKING_DIR }}
+      - name: Build and Push Docker image
         run: |
-          echo "Running Terragrunt plan for validation..."
-          terragrunt run-all plan --terragrunt-non-interactive
-        continue-on-error: false
+          docker build -t ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
+            ./terraform/states/environments/aws/my-aws-account/${{ env.AWS_REGION }}/dev-ireland-1/lambda/order-retrieval/lambda_source_code
+          docker tag ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
+            ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
+          docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
 
-      - name: Deploy Order Retrieval Lambda with Terragrunt
-        working-directory: ${{ env.TERRAGRUNT_WORKING_DIR }}
+      - name: Retrieve Latest ECR Image Digest
+        id: get-ecr-digest
+        run: |
+          IMAGE_DIGEST=$(aws ecr describe-images \
+            --repository-name ${{ env.ECR_REPO }} \
+            --region ${{ env.AWS_REGION }} \
+            --query "sort_by(imageDetails,& imagePushedAt)[-1].imageDigest" \
+            --output text)
+
+          echo "ECR_IMAGE_DIGEST=${IMAGE_DIGEST}" >> $GITHUB_ENV
+          echo "IMAGE_URI=${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}@${IMAGE_DIGEST}" >> $GITHUB_ENV
+          echo "Image Digest: ${IMAGE_DIGEST}"
+
+      - name: Validate Terraform Code
+        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
+        run: |
+          terragrunt run-all validate
+
+      - name: Update Terragrunt Configuration
+        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
+        run: |
+          sed -i "s|image_uri = .*|image_uri = \"${{ env.IMAGE_URI }}\"|" terragrunt.hcl
+          cat terragrunt.hcl
+
+      - name: Apply Terraform Changes with Terragrunt
+        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
         run: |
           terragrunt run-all apply --auto-approve

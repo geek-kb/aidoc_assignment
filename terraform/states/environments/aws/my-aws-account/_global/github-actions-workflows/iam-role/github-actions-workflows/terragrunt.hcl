@@ -141,7 +141,9 @@ EOF
             "ecr:PutImage",
             "ecr:InitiateLayerUpload",
             "ecr:UploadLayerPart",
-            "ecr:CompleteLayerUpload"
+            "ecr:CompleteLayerUpload",
+            "ecr:DescribeImages",
+            "ecr:BatchGetImage" # New: Needed to retrieve image metadata
           ],
           Resource = dependency.ecr_order_retrieval.outputs.repository_arn
         }
@@ -154,9 +156,58 @@ EOF
           Effect = "Allow",
           Action = [
             "lambda:GetFunction",
+            "lambda:GetFunctionConfiguration", # New: Needed for checking function config
             "lambda:UpdateFunctionCode"
           ],
           Resource = dependency.lambda_order_retrieval.outputs.lambda_arn
+        }
+      ]
+    },
+    S3Access = {
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "s3:PutObject",
+            "s3:GetObject",
+            "s3:ListBucket"
+          ],
+          Resource = [
+            "arn:aws:s3:::your-s3-bucket",
+            "arn:aws:s3:::your-s3-bucket/*"
+          ]
+        }
+      ]
+    },
+    TerraformStateAccess = {
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "s3:GetObject",
+            "s3:PutObject"
+          ],
+          Resource = "arn:aws:s3:::your-terraform-state-bucket/*"
+        },
+        {
+          Effect = "Allow",
+          Action = [
+            "dynamodb:GetItem",
+            "dynamodb:PutItem"
+          ],
+          Resource = "arn:aws:dynamodb:${local.region}:${local.account_id}:table/your-terraform-lock-table"
+        }
+      ]
+    },
+    IAMPassRole = {
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect   = "Allow",
+          Action   = "iam:PassRole",
+          Resource = "arn:aws:iam::${local.account_id}:role/lambda-execution-role"
         }
       ]
     }
