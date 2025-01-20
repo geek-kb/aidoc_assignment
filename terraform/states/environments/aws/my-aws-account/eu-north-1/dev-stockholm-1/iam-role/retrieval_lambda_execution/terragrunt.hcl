@@ -23,19 +23,11 @@ locals {
   sqs_queue_name                     = "order-processor"
 
   assignment_prefix  = "aidoc-devops2-ex"
-  ssm_parameter_name = "/${local.environment_name}/lambda/${local.function_name}/api_key"
+  ssm_parameter_name = "/dev-stockholm-1/lambda/${local.function_name}/api_key"
 }
 
 terraform {
   source = "${get_repo_root()}/terraform/modules/iam-role"
-}
-
-dependency "ecr_order_retrieval" {
-  config_path = "../../ecr/${local.function_name}"
-
-  mock_outputs = {
-    repository_arn = "arn:aws:ecr:${local.region}:${local.account_id}:repository/${local.function_name}"
-  }
 }
 
 dependency "sqs_order_processor" {
@@ -43,14 +35,6 @@ dependency "sqs_order_processor" {
 
   mock_outputs = {
     sqs_queue_arn = "arn:aws:sqs:${local.region}:${local.account_id}:${local.sqs_queue_name}"
-  }
-}
-
-dependency "ssm" {
-  config_path = "../../ssm/managed"
-
-  mock_outputs = {
-    ssm_parameter_arn = "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.ssm_parameter_name}"
   }
 }
 
@@ -81,9 +65,10 @@ inputs = {
           "Effect" : "Allow",
           "Action" : [
             "ecr:BatchGetImage",
-            "ecr:GetDownloadUrlForLayer"
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:GetLifecyclePolicy"
           ],
-          "Resource" : "${dependency.ecr_order_retrieval.outputs.repository_arn}"
+          "Resource" : "arn:aws:ecr:${local.region}:${local.account_id}:repository/*"
         },
         {
           "Effect" : "Allow",
@@ -135,7 +120,18 @@ inputs = {
         }
       ]
     },
-
+    SSM = {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "ssm:GetParameter"
+          ],
+          "Resource" : "arn:aws:ssm:${local.region}:${local.account_id}:parameter/dev-stockholm-1/*"
+        }
+      ]
+    }
     KmsDecryptAPI_KEY = {
       "Version" : "2012-10-17",
       "Statement" : [
@@ -147,7 +143,8 @@ inputs = {
           "Resource" : "arn:aws:kms:${local.region}:${local.account_id}:alias/bootstrap/sops-key"
         }
       ]
-    }
+    },
+
   }
 
   tags = {

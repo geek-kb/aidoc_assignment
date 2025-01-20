@@ -92,10 +92,11 @@ EOF
             "ecr:UploadLayerPart",
             "ecr:CompleteLayerUpload",
             "ecr:PutImage",
-            "ecr:ListTagsForResource"
+            "ecr:ListTagsForResource",
+            "ecr:GetLifecyclePolicy"
           ],
           Resource = [
-            "*"
+            "arn:aws:ecr:${local.region}:${local.account_id}:repository/order-retrieval"
           ]
         }
       ]
@@ -132,7 +133,7 @@ EOF
             "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks",
             "arn:aws:kms:${local.region}:${local.account_id}:key/3beb74d1-90ae-4b5a-a205-fd043c751bba",
             "arn:aws:kms:${local.region}:${local.account_id}:key/00fc7f10-cd91-461e-84d3-0c679e709f53",
-            "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.environment_name}/lambda/*"
+            "arn:aws:ssm:${local.region}:${local.account_id}:parameter/dev-stockholm-1/*"
           ]
         }
       ]
@@ -146,7 +147,7 @@ EOF
             "sqs:GetQueueAttributes"
           ],
           Resource = [
-            "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.environment_name}/lambda/${local.lambda_function_name}/*"
+            "arn:aws:sqs:${local.region}:${local.account_id}:order-processor"
           ]
         }
       ]
@@ -163,7 +164,7 @@ EOF
             "ssm:DescribeParameters"
           ],
           Resource = [
-            "arn:aws:sqs:${local.region}:${local.account_id}:order-processor"
+            "arn:aws:ssm:${local.region}:${local.account_id}:parameter/dev-stockholm-1/*"
           ]
         },
         {
@@ -173,7 +174,7 @@ EOF
             "kms:DescribeKey"
           ],
           Resource = [
-            "arn:aws:kms:${local.region}:${local.account_id}:key/*"
+            "arn:aws:kms:${local.region}:${local.account_id}:alias/bootstrap/sops-key"
           ]
         }
       ]
