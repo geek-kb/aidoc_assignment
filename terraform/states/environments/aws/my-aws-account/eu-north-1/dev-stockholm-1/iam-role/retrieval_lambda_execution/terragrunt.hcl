@@ -22,7 +22,8 @@ locals {
   bucket_directory_and_db_table_name = "orders"
   sqs_queue_name                     = "order-processor"
 
-  assignment_prefix = "aidoc-devops2-ex"
+  assignment_prefix  = "aidoc-devops2-ex"
+  ssm_parameter_name = "/${local.environment_name}/lambda/${local.function_name}/api_key"
 }
 
 terraform {
@@ -49,7 +50,7 @@ dependency "ssm" {
   config_path = "../../ssm/managed"
 
   mock_outputs = {
-    ssm_parameter_arn = "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.environment}/lambda/${local.function_name}/API_KEY"
+    ssm_parameter_arn = "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.ssm_parameter_name}"
   }
 }
 
