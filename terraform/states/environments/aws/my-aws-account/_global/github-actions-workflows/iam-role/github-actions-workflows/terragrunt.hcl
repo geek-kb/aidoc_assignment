@@ -92,10 +92,7 @@ EOF
             "ecr:UploadLayerPart",
             "ecr:CompleteLayerUpload",
             "ecr:PutImage",
-            "ListTagsForResource",
-            "ssm:GetParameter",
-            "ssm:PutParameter",
-            "ssm:DeleteParameter"
+            "ecr:ListTagsForResource"
           ],
           Resource = [
             "*"
@@ -125,14 +122,45 @@ EOF
             "kms:Encrypt",
             "kms:GenerateDataKey",
             "sqs:GetQueueAttributes",
-            "ssm:GetParameter"
+            "ssm:GetParameter",
+            "ssm:PutParameter",
+            "ssm:DeleteParameter"
+
           ],
           Resource = [
             "arn:aws:s3:::${local.assignment_prefix}-terraform-state",
             "arn:aws:s3:::${local.assignment_prefix}-terraform-state/*",
             "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks",
             "arn:aws:kms:${local.region}:${local.account_id}:key/3beb74d1-90ae-4b5a-a205-fd043c751bba",
-            "arn:aws:kms:${local.region}:${local.account_id}:key/00fc7f10-cd91-461e-84d3-0c679e709f53"
+            "arn:aws:kms:${local.region}:${local.account_id}:key/00fc7f10-cd91-461e-84d3-0c679e709f53",
+            "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.environment_name}/lambda/*"
+          ]
+        }
+      ]
+    },
+    ssm_and_kms_access = {
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "ssm:GetParameter",
+            "ssm:PutParameter",
+            "ssm:DeleteParameter",
+            "ssm:DescribeParameters"
+          ],
+          Resource = [
+            "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.environment_name}/lambda/${local.lambda_function_name}/*"
+          ]
+        },
+        {
+          Effect = "Allow",
+          Action = [
+            "kms:Decrypt",
+            "kms:DescribeKey"
+          ],
+          Resource = [
+            "arn:aws:kms:${local.region}:${local.account_id}:key/*"
           ]
         }
       ]
