@@ -114,18 +114,25 @@ for a company's growth and future.
                 │           └── managed
 ```
 
-If it would be a real case scenario, I would separate the `modules` and the `states` to two different repositories, but for the sake of the assignment the are directories.
+If it would be a real case scenario, I'd separate the `modules` and the `states` to two different repositories, but for the sake of the assignment the are directories.
+
 `environments` is the top level of the `states` directory and below it you will find the `aws` directory.
+
 I thought that today, for the assignment, I only manage one provider of resource - AWS, but in the real world I would probably manage resources by many more providers.
+
 Under `aws` directory, you can find a representation of a single AWS account, but again, in a real world scenario, a company would probably have an organizational account which
-contains more `accounts` (production, dev, qa, etc..), so this is where I would place the other AWS accounts. In addition to that, you can find there the `parent terragrunt.hcl` file,
-the highest one in the hierarchy and it contains the `remote state s3 backend` and `provider` settings along with other common tags. If I had more accounts, that's where I would define their
-account level variables. Using: include
-Under each `account` directory, I created a directory per `AWS region`, for the assignment I created only 2 regional directories. In each regional directory like that, you can find a `region.hcl`
-file where I placed variables that are region wide
-The other directory in the level of the regions is also treated like a region, but in fact it's the path where I placed all the `_global` resources, resources that every region
-requires and since it's only "the beginning" of the so-called company I created, you could treat the `_global` directory like a management region.
+contains more `accounts` (production, dev, qa, etc..), so this is where I would place the other AWS accounts.
+
+In addition to that, you can find there the `parent terragrunt.hcl` file, the highest one in the hierarchy and it contains the `remote state s3 backend` and `provider` settings along with other common tags.
+
+If I had more accounts, that's where I would define their account level variables.
+
+Under each `account` directory, I created a directory per `AWS region`, for the assignment I created only 2 regional directories.
+
+In each regional directory like that, you can find a `region.hcl` file where I placed variables that are region wide, the other directory in the level of the regions is also treated like a region, but in fact it's the path where I placed all the `_global` resources, resources that every region requires and since it's only "the beginning" of the so-called company I created, you could treat the `_global` directory like a management region.
+
 Under each `region` directory, you can find `environment` directories like `dev-stockholm-1`, this structure allows you having a number of different environments under the same region if needed.
+
 Under each environment directory, you can find the state directories of the modules that are active and configured in that environment and under these, the actual names of the managed resources and
 their `terragrunt.hcl`.
 
@@ -479,3 +486,82 @@ jobs:
       - name: Apply Terraform
         run: terragrunt apply
 ```
+
+## Role Assume Examples - Role Flows
+
+1. **OIDC Auth Role**
+
+   ```mermaid
+   graph TD
+       A[GitHub Actions] -->|Authenticate| B[OIDC Auth Role]
+       B -->|Assume| C[GitHub Workflows Role]
+   ```
+
+   ```yaml
+   # filepath: .github/workflows/example.yml
+   - name: Configure AWS credentials
+     uses: aws-actions/configure-aws-credentials@v2
+     with:
+       role-to-assume: arn:aws:iam::$ACCOUNT_ID:role/aidoc-devops2-ex-github-oidc-auth
+   ```
+
+2. **GitHub Workflows Role**
+
+   ```mermaid
+   graph TD
+       A[GitHub Workflows Role] -->|Push| B[ECR]
+       A -->|Deploy| C[Infrastructure]
+       A -->|Access| D[State Files]
+   ```
+
+   ```yaml
+   # filepath: .github/workflows/example.yml
+   - name: Assume Workflows Role
+     run: |
+       aws sts assume-role \
+         --role-arn arn:aws:iam::$ACCOUNT_ID:role/aidoc-devops2-ex-github-actions-workflows \
+         --role-session-name "GitHubActionsSession"
+   ```
+
+3. **State Manager Role**
+
+   ```mermaid
+   graph TD
+       A[Developer] -->|Assume| B[State Manager Role]
+       B -->|Manage| C[State Files]
+       B -->|Lock| D[DynamoDB]
+   ```
+
+   ```bash
+   # Local development
+   export AWS_PROFILE=state-manager
+   terraform state list
+   terraform state show aws_lambda_function.example
+   ```
+
+4. **Terraform Role**
+
+   ```mermaid
+   graph TD
+       A[Developer] -->|Assume| B[Terraform Role]
+       B -->|Deploy| C[Infrastructure]
+   ```
+
+   ```bash
+   # Local development
+   export AWS_PROFILE=terraform
+   terraform plan
+   terraform apply
+   ```
+
+5. **SOPS Role**
+   ```mermaid
+   graph TD
+       A[Developer/CI] -->|Assume| B[SOPS Role]
+       B -->|Decrypt| C[Secrets]
+   ```
+   ```bash
+   # Local development
+   export AWS_PROFILE=sops
+   sops -d secrets.yaml
+   ```

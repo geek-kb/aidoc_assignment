@@ -27,6 +27,7 @@ locals {
   function_source_zip_path  = "${local.function_directory}/${local.function_zip_filename}"
 
   ssm_parameter_name = "/${local.environment_name}/${local.service_name}/${local.function_name}/api-key"
+  sops_file_path     = "../../ssm/managed/params.yaml"
 }
 
 terraform {
@@ -76,7 +77,7 @@ inputs = {
   }
 
   lambda_environment = {
-    API_KEY_PARAMETER_NAME = local.ssm_parameter_name
-    SQS_QUEUE_URL          = "${dependency.sqs_queue.outputs.sqs_queue_url}"
+    API_KEY       = yamldecode(sops_decrypt_file(locals.sops_file_path))["${local.ssm_parameter_name}"]
+    SQS_QUEUE_URL = "${dependency.sqs_queue.outputs.sqs_queue_url}"
   }
 }
