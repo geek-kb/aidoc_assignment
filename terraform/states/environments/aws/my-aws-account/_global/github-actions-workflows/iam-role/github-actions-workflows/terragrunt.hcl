@@ -60,7 +60,8 @@ EOF
           Effect = "Allow",
           Action = [
             "iam:GetRole",
-            "iam:ListRolePolicies"
+            "iam:ListRolePolicies",
+            "iam:GetRolePolicy"
           ],
           Resource = [
             "*"
