@@ -106,7 +106,7 @@ inputs = {
             "logs:PutLogEvents",
             "logs:DescribeLogStreams"
           ],
-          "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.function_name}:*"
+          "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${replace("order-retrieval", "-", "_")}:*"
         },
         {
           "Effect" : "Allow",

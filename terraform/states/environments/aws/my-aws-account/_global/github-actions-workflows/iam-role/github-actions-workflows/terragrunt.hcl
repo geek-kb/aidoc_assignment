@@ -61,7 +61,8 @@ EOF
           Action = [
             "s3:PutObject",
             "s3:GetObject",
-            "s3:ListBucket"
+            "s3:ListBucket",
+            "s3:GetBucketVersioning"
           ],
           Resource = [
             "arn:aws:s3:::ordering-system",
@@ -97,7 +98,7 @@ EOF
         }
       ]
     },
-    terraform_access = {
+    terraform_state_access = {
       Version = "2012-10-17",
       Statement = [
         {
@@ -106,14 +107,21 @@ EOF
             "s3:ListBucket",
             "s3:GetObject",
             "s3:PutObject",
+            "s3:GetBucketVersioning",
             "dynamodb:GetItem",
             "dynamodb:PutItem",
-            "dynamodb:DeleteItem"
+            "dynamodb:DeleteItem",
+            "kms:Decrypt",
+            "kms:DescribeKey",
+            "kms:Encrypt",
+            "kms:GenerateDataKey"
           ],
           Resource = [
             "arn:aws:s3:::${local.assignment_prefix}-terraform-state",
             "arn:aws:s3:::${local.assignment_prefix}-terraform-state/*",
-            "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks"
+            "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks",
+            "arn:aws:kms:${local.region}:${local.account_id}:key/3beb74d1-90ae-4b5a-a205-fd043c751bba",
+            "arn:aws:kms:${local.region}:${local.account_id}:key/00fc7f10-cd91-461e-84d3-0c679e709f53"
           ]
         }
       ]

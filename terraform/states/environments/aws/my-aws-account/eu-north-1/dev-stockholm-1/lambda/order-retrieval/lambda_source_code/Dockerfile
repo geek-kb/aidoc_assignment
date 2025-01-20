@@ -5,7 +5,7 @@ WORKDIR /var/task
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-COPY order_retrieval.py requirements.txt .
+COPY order_retrieval.py requirements.txt ./
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/var/task

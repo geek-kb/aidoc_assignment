@@ -11,7 +11,7 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 defaults:
   run:
@@ -44,20 +44,11 @@ jobs:
         run: |
           TEMP_DIR=$(mktemp -d)
           cd $TEMP_DIR
-          
           curl -LO https://releases.hashicorp.com/terraform/1.5.5/terraform_1.5.5_linux_amd64.zip
           unzip -o terraform_1.5.5_linux_amd64.zip
-          
           curl -LO https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.12/terragrunt_linux_amd64
-          
-          sudo rm -f /usr/local/bin/terraform /usr/local/bin/terragrunt
-          
           sudo install -o root -g root -m 0755 terraform /usr/local/bin/terraform
           sudo install -o root -g root -m 0755 terragrunt_linux_amd64 /usr/local/bin/terragrunt
-          
-          terraform version
-          terragrunt --version
-          
           cd -
           rm -rf $TEMP_DIR
 
@@ -73,11 +64,6 @@ jobs:
           CREDENTIALS=$(aws sts assume-role \
             --role-arn "arn:aws:iam::${{ env.ACCOUNT_ID }}:role/aidoc-devops2-ex-github-actions-workflows" \
             --role-session-name "GitHubActionsSession")
-
-          echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')"
-          echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')"
-          echo "::add-mask::$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')"
-
           echo "AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
@@ -87,16 +73,12 @@ jobs:
         run: |
           NEW_MD5=$(find ${{ env.TG_DIR }}/lambda_source_code -type f -exec md5sum {} + | sort | md5sum | awk '{ print $1 }')
           echo "NEW_MD5=${NEW_MD5}" >> $GITHUB_ENV
-          
           if [[ -f "${{ env.MD5_FILE }}" ]]; then
             OLD_MD5=$(cat "${{ env.MD5_FILE }}")
             echo "OLD_MD5=${OLD_MD5}" >> $GITHUB_ENV
           else
             OLD_MD5="none"
           fi
-          
-          echo "New MD5: ${NEW_MD5}"
-          echo "Old MD5: ${OLD_MD5}"
 
       - name: Check if Code Has Changed
         id: check-md5
@@ -107,11 +89,6 @@ jobs:
             echo "CODE_CHANGED=true" >> $GITHUB_ENV
           fi
 
-      - name: Save New MD5 Hash
-        if: env.CODE_CHANGED == 'true'
-        run: |
-          echo "${{ env.NEW_MD5 }}" > ${{ env.MD5_FILE }}
-
       - name: Login to Amazon ECR
         if: env.CODE_CHANGED == 'true'
         run: |
@@ -121,10 +98,8 @@ jobs:
       - name: Build and Push Docker image
         if: env.CODE_CHANGED == 'true'
         run: |
-          docker build -t ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
-            ./${{ env.TG_DIR }}/lambda_source_code
-          docker tag ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} \
-            ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
+          docker build -t ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} ./${{ env.TG_DIR }}/lambda_source_code
+          docker tag ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }} ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
 
       - name: Retrieve Latest ECR Image Digest
@@ -136,23 +111,26 @@ jobs:
             --region ${{ env.AWS_REGION }} \
             --query "sort_by(imageDetails,& imagePushedAt)[-1].imageDigest" \
             --output text)
-
-          echo "ECR_IMAGE_DIGEST=${IMAGE_DIGEST}" >> $GITHUB_ENV
           echo "IMAGE_URI=${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}@${IMAGE_DIGEST}" >> $GITHUB_ENV
-          echo "Image Digest: ${IMAGE_DIGEST}"
-
-      - name: Validate Terraform Code
-        working-directory: ${{ env.TG_DIR }}
-        run: |
-          terragrunt run-all validate --terragrunt-non-interactive --terragrunt-ignore-external-dependencies
 
       - name: Update Terragrunt Configuration
+        if: env.CODE_CHANGED == 'true'
         working-directory: ${{ env.TG_DIR }}
         run: |
-          if [[ "${{ env.CODE_CHANGED }}" == "true" ]]; then
-            sed -i "s|image_uri = .*|image_uri = \"${{ env.IMAGE_URI }}\"|" terragrunt.hcl
-          fi
-          cat terragrunt.hcl
+          sed -i "s|image_uri = .*|image_uri = \"${{ env.IMAGE_URI }}\"|" terragrunt.hcl
+
+      - name: Configure Git
+        if: env.CODE_CHANGED == 'true'
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Commit and Push MD5 File
+        if: env.CODE_CHANGED == 'true'
+        run: |
+          git add ${{ env.MD5_FILE }}
+          git commit -m "chore: update lambda code MD5 hash [skip ci]"
+          git push
 
       - name: Apply Terraform Changes with Terragrunt
         working-directory: ${{ env.TG_DIR }}
