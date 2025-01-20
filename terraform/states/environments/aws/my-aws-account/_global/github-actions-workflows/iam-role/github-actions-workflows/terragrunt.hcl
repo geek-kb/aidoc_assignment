@@ -109,6 +109,8 @@ EOF
             "s3:GetObject",
             "s3:PutObject",
             "s3:GetBucketVersioning",
+            "s3:GetBucketPolicy",
+            "s3:GetBucketPublicAccessBlock",
             "dynamodb:GetItem",
             "dynamodb:PutItem",
             "dynamodb:DeleteItem",
