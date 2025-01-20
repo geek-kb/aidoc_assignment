@@ -92,7 +92,10 @@ EOF
             "ecr:UploadLayerPart",
             "ecr:CompleteLayerUpload",
             "ecr:PutImage",
-            "ListTagsForResource"
+            "ListTagsForResource",
+            "ssm:GetParameter",
+            "ssm:PutParameter",
+            "ssm:DeleteParameter"
           ],
           Resource = [
             "*"

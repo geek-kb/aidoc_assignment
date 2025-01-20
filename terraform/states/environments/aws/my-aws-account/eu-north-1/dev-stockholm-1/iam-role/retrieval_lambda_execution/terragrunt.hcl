@@ -147,21 +147,6 @@ inputs = {
           "Resource" : "arn:aws:kms:${local.region}:${local.account_id}:alias/bootstrap/sops-key"
         }
       ]
-    },
-
-    ssm_access = {
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = [
-            "ssm:GetParameter"
-          ]
-          Resource = [
-            "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.environment_name}/lambda/${local.function_name}/api-key"
-          ]
-        }
-      ]
     }
   }
 
