@@ -62,7 +62,8 @@ EOF
             "s3:PutObject",
             "s3:GetObject",
             "s3:ListBucket",
-            "s3:GetBucketVersioning"
+            "s3:GetBucketVersioning",
+            "s3:GetBucketPolicy"
           ],
           Resource = [
             "arn:aws:s3:::ordering-system",
