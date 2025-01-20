@@ -1,16 +1,8 @@
 resource "aws_ssm_parameter" "this" {
-  for_each = var.parameters
+  for_each = var.ssm_params
 
-  name        = each.value.name
-  type        = each.value.type
-  value       = each.value.value
-  description = lookup(each.value, "description", null)
-  key_id      = lookup(each.value, "key_id", null)
-  overwrite   = lookup(each.value, "overwrite", false)
-
-  tags = merge(
-    var.tags,
-    lookup(each.value, "tags", {})
-  )
+  name   = format("%s%s", var.prefix, trimsuffix(each.key, var.unencrypted_suffix))
+  type   = length(regexall(".*${var.unencrypted_suffix}", each.key)) > 0 ? "String" : "SecureString"
+  value  = each.value
+  key_id = length(regexall(".*${var.unencrypted_suffix}", each.key)) > 0 ? null : var.kms_key_id
 }
-

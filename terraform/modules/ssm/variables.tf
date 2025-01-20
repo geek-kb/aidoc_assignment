@@ -1,24 +1,22 @@
-variable "parameters" {
-  description = "A map of parameters to create in SSM Parameter Store."
-  type = map(object({
-    name        = string
-    type        = string  # Valid values: "String", "StringList", "SecureString"
-    value       = string
-    description = optional(string, "")
-    key_id      = optional(string, null) # Required for SecureString
-    overwrite   = optional(bool, false)
-    tags        = optional(map(string), {})
-  }))
+variable "ssm_params" {
+  type    = map(string)
+  default = {}
 }
 
-variable "tags" {
-  description = "A map of tags to apply to all parameters."
-  type        = map(string)
-  default     = {}
-}
-
-variable "account_id" {
-  description = "The AWS account ID"
+variable "kms_key_id" {
+  description = "The KMS key id or arn for encrypting a SecureString"
   type        = string
-  default = ""
+  default     = "arn:aws:kms:eu-north-1:912466608750:key/00fc7f10-cd91-461e-84d3-0c679e709f53"
+}
+
+variable "prefix" {
+  description = "Prefix added to ssm parameter name"
+  type        = string
+  default     = ""
+}
+
+variable "unencrypted_suffix" {
+  description = "Parameters with this suffix in the name will be saved as plaintext values."
+  type        = string
+  default     = "_unencrypted"
 }

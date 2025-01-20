@@ -1,9 +1,6 @@
 terraform_version_constraint = "= 1.5.5"
 
 locals {
-  # account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
-  # region_vars  = read_terragrunt_config(find_in_parent_folders("region.hcl"))
-
   account_name = "my-aws-account"
   account_id   = "912466608750"
   region       = "eu-north-1"
