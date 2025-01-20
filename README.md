@@ -134,10 +134,20 @@ their `terragrunt.hcl`.
 This document covers the steps (in the correct order) to deploy the an environment.
 
 ```mermaid
+graph TD
     A[Admin User] -->|Creates| B[Bootstrap Resources]
-    B -->|Creates| C[State Manager Role]
-    C -->|Used by| D[Terraform Role]
-    D -->|Deploys| E[Other Resources]
+    B -->|Contains| C[OIDC Auth Role]
+    B -->|Contains| D[KMS Keys]
+    B -->|Contains| E[State Bucket]
+    B -->|Contains| F[DynamoDB Locks]
+    C -->|Authenticates| G[GitHub Actions]
+    G -->|Assumes| H[GitHub Workflows Role]
+    H -->|Assumes| I[Terraform Role]
+    H -->|Assumes| J[State Manager Role]
+    H -->|Assumes| K[SOPS Role]
+    I -->|Deploys| L[Application Resources]
+    J -->|Manages| E
+    K -->|Uses| D
 ```
 
 ### Bootstrap Resources Plan
