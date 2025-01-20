@@ -96,9 +96,29 @@ EOF
           ]
         }
       ]
+    },
+    terraform_access = {
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "s3:ListBucket",
+            "s3:GetObject",
+            "s3:PutObject",
+            "dynamodb:GetItem",
+            "dynamodb:PutItem",
+            "dynamodb:DeleteItem"
+          ],
+          Resource = [
+            "arn:aws:s3:::${local.assignment_prefix}-terraform-state",
+            "arn:aws:s3:::${local.assignment_prefix}-terraform-state/*",
+            "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks"
+          ]
+        }
+      ]
     }
   }
-
   tags = {
     Environment = local.environment_name
     Project     = "ordering-system"

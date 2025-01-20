@@ -53,6 +53,15 @@ inputs = {
             "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
           }
         }
+      },
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : [
+            "arn:aws:iam::${local.region}:role/${local.assignment_prefix}-github-actions-workflows"
+          ]
+        },
+        "Action" : "sts:AssumeRole"
       }
     ]
   })
