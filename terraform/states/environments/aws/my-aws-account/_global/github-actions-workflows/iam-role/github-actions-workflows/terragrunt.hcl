@@ -117,7 +117,8 @@ EOF
             "kms:Decrypt",
             "kms:DescribeKey",
             "kms:Encrypt",
-            "kms:GenerateDataKey"
+            "kms:GenerateDataKey",
+            "s3:PutEncryptionConfiguration"
           ],
           Resource = [
             "arn:aws:s3:::${local.assignment_prefix}-terraform-state",
