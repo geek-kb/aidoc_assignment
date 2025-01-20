@@ -10,6 +10,8 @@ COPY order_retrieval.py .
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/var/task
 ENV DEBUG=true
+ENV API_KEY_PARAMETER_NAME="/dev-stockholm-1/lambda/order-retrieval/api-key"
+ENV SQS_QUEUE_URL=""
 
 USER nobody
 
