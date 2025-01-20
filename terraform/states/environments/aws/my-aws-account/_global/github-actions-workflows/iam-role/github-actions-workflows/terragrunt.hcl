@@ -120,7 +120,8 @@ EOF
             "kms:DescribeKey",
             "kms:Encrypt",
             "kms:GenerateDataKey",
-            "sqs:GetQueueAttributes"
+            "sqs:GetQueueAttributes",
+            "ssm:GetParameter"
           ],
           Resource = [
             "arn:aws:s3:::${local.assignment_prefix}-terraform-state",
