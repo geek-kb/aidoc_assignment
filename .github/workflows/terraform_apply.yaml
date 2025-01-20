@@ -1,0 +1,73 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - id: set-matrix
+        run: |
+          CHANGED_DIRS=$(git diff --name-only HEAD^ HEAD | grep '^terraform/' | xargs -I {} dirname {} | sort -u | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=${CHANGED_DIRS}" >> $GITHUB_OUTPUT
+
+  apply:
+    needs: prepare
+    if: needs.prepare.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        directory: ${{ fromJson(needs.prepare.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Terraform & Terragrunt
+        run: |
+          TEMP_DIR=$(mktemp -d)
+          cd $TEMP_DIR
+          curl -LO https://releases.hashicorp.com/terraform/1.5.5/terraform_1.5.5_linux_amd64.zip
+          unzip -o terraform_1.5.5_linux_amd64.zip
+          curl -LO https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.12/terragrunt_linux_amd64
+          sudo install -o root -g root -m 0755 terraform /usr/local/bin/terraform
+          sudo install -o root -g root -m 0755 terragrunt_linux_amd64 /usr/local/bin/terragrunt
+          cd -
+          rm -rf $TEMP_DIR
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/aidoc-devops2-ex-github-oidc-auth
+          aws-region: eu-north-1
+
+      - name: Assume Role
+        run: |
+          CREDENTIALS=$(aws sts assume-role \
+            --role-arn "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/aidoc-devops2-ex-github-actions-workflows" \
+            --role-session-name "GitHubActionsSession")
+          echo "AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
+
+      - name: Apply Changes
+        if: endsWith(matrix.directory, 'terragrunt.hcl')
+        working-directory: ${{ matrix.directory }}
+        run: |
+          terragrunt run-all apply --terragrunt-non-interactive --auto-approve --terragrunt-include-external-dependencies
