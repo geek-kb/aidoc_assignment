@@ -26,8 +26,8 @@ terraform {
   source = "${get_repo_root()}/terraform/modules/iam-role"
 }
 
-dependency "github_oidc" {
-  config_path = "../../../_bootstrap/github-oidc/github-oidc-provider"
+dependency "github_oidc_auth_role" {
+  config_path = "../github-oidc-auth"
 }
 
 inputs = {
@@ -35,28 +35,22 @@ inputs = {
 
   max_session_duration = 14400
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Federated = dependency.github_oidc.outputs.arn
-        },
-        Action = "sts:AssumeRoleWithWebIdentity",
-        Condition = {
-          "StringLike" = {
-            "token.actions.githubusercontent.com:sub" : [
-              for repo in "${local.repos_list}" : "repo:${repo}:*"
-            ]
-          },
-          "StringEquals" = {
-            "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
-          }
-        }
-      }
-    ]
-  })
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "${dependency.github_oidc_auth_role.outputs.arn}"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
 
   inline_policies_to_attach = {
     S3Access = {
