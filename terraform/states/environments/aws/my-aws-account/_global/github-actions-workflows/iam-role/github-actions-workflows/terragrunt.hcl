@@ -91,7 +91,8 @@ EOF
             "ecr:InitiateLayerUpload",
             "ecr:UploadLayerPart",
             "ecr:CompleteLayerUpload",
-            "ecr:PutImage"
+            "ecr:PutImage",
+            "ListTagsForResource"
           ],
           Resource = [
             "*"
