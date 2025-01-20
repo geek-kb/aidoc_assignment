@@ -141,4 +141,4 @@ jobs:
       - name: Apply Terraform Changes with Terragrunt
         working-directory: ${{ env.TG_DIR }}
         run: |
-          terragrunt run-all apply --auto-approve
+          terragrunt run-all apply --terragrunt-non-interactive --auto-approve --terragrunt-include-external-dependencies
