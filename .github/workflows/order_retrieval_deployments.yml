@@ -119,18 +119,32 @@ jobs:
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-      - name: Save New MD5 Hash
+      - name: Save and Push MD5 Hash
         if: env.CODE_CHANGED == 'true'
         run: |
           git fetch origin main
           git pull --rebase origin main
           
+          if [[ -f "${{ env.MD5_FILE }}" ]] && [[ "$(cat ${{ env.MD5_FILE }})" == "${{ env.NEW_MD5 }}" ]]; then
+            echo "MD5 hash already up to date, skipping commit"
+            exit 0
+          fi
+          
           mkdir -p $(dirname ${{ env.MD5_FILE }})
           echo "${{ env.NEW_MD5 }}" > ${{ env.MD5_FILE }}
           
+          if git diff --quiet ${{ env.MD5_FILE }}; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
           git add ${{ env.MD5_FILE }}
           git commit -m "chore: update lambda code MD5 hash [skip ci]"
-          git push origin main
+          git push origin main || {
+            echo "Push failed, retrying with fresh pull"
+            git pull --rebase origin main
+            git push origin main
+          }
 
       - name: Update Terragrunt Configuration
         if: env.CODE_CHANGED == 'true'
