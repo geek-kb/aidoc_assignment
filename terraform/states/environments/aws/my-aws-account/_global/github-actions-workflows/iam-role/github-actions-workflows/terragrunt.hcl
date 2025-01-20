@@ -63,7 +63,7 @@ EOF
             "iam:ListRolePolicies"
           ],
           Resource = [
-            "arn:aws:iam::${local.account_id}:role/*"
+            "*"
           ]
         }
       ]
