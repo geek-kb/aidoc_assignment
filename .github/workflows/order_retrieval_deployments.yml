@@ -122,15 +122,15 @@ jobs:
       - name: Save New MD5 Hash
         if: env.CODE_CHANGED == 'true'
         run: |
+          git fetch origin main
+          git pull --rebase origin main
+          
           mkdir -p $(dirname ${{ env.MD5_FILE }})
           echo "${{ env.NEW_MD5 }}" > ${{ env.MD5_FILE }}
-
-      - name: Commit and Push MD5 File
-        if: env.CODE_CHANGED == 'true'
-        run: |
+          
           git add ${{ env.MD5_FILE }}
           git commit -m "chore: update lambda code MD5 hash [skip ci]"
-          git push
+          git push origin main
 
       - name: Update Terragrunt Configuration
         if: env.CODE_CHANGED == 'true'
