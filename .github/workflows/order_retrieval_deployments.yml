@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/**"
+      - "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-ireland-1/lambda/order-retrieval/**"
       - ".github/workflows/order_retrieval_deployments.yml"
   workflow_dispatch:
 
@@ -18,13 +18,13 @@ defaults:
     shell: bash
 
 env:
-  AWS_REGION: "eu-west-1"
+  AWS_REGION: "eu-north-1"
   ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   ECR_REPO: "order-retrieval"
   LAMBDA_FUNCTION_NAME: "order-retrieval"
   IMAGE_TAG: "latest"
-  TG_DIR: "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval"
-  MD5_FILE: "terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/lambda_code.md5"
+  TG_DIR: "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-ireland-1/lambda/order-retrieval"
+  MD5_FILE: "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-ireland-1/lambda/order-retrieval/lambda_code.md5"
 
 jobs:
   deploy:
@@ -158,30 +158,30 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $STATE_CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
 
-      - name: Configure backend.tf
-        id: backend
-        working-directory: terraform/states/environments/aws/my-aws-account/eu-west-1/dev-ireland-1/lambda/order-retrieval/
-        run: |
-          cat <<EOF > backend.tf
-          remote_state {
-            backend = "s3"
-            generate = {
-              path      = "backend.tf"
-              if_exists = "overwrite_terragrunt"
-            }
-            config = {
-              bucket         = "aidoc-devops2-ex-terraform-state-l9bsj3h"
-              key            = "\${path_relative_to_include()}/terraform.tfstate"
-              region         = "eu-west-1"
-              kms_key_id     = "arn:aws:kms:eu-west-1:***:key/0544f8e2-f4a6-4b64-8466-fdf76d6e96be"
-              dynamodb_table = "aidoc-devops2-ex-terraform-state-locks"
-              encrypt        = true
-            }
-          }
-          EOF
-          cat backend.tf
-          ls -l
-          echo "pwd: $(pwd)"
+      # - name: Configure backend.tf
+      #   id: backend
+      #   working-directory: terraform/states/environments/aws/my-aws-account/eu-north-1/dev-ireland-1/lambda/order-retrieval/
+      #   run: |
+      #     cat <<EOF > backend.tf
+      #     remote_state {
+      #       backend = "s3"
+      #       generate = {
+      #         path      = "backend.tf"
+      #         if_exists = "overwrite_terragrunt"
+      #       }
+      #       config = {
+      #         bucket         = "aidoc-devops2-ex-terraform-state-l9bsj3h"
+      #         key            = "\${path_relative_to_include()}/terraform.tfstate"
+      #         region         = "eu-north-1"
+      #         kms_key_id     = "arn:aws:kms:eu-north-1:***:key/0544f8e2-f4a6-4b64-8466-fdf76d6e96be"
+      #         dynamodb_table = "aidoc-devops2-ex-terraform-state-locks"
+      #         encrypt        = true
+      #       }
+      #     }
+      #     EOF
+      #     cat backend.tf
+      #     ls -l
+      #     echo "pwd: $(pwd)"
 
       - name: Validate Terraform Code
         working-directory: ${{ env.TG_DIR }}

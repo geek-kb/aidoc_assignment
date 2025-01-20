@@ -446,7 +446,7 @@ graph TD
 
 ```yaml
 # GitHub Actions Workflow Example
-name: Deploy Infrastructure
+name: Deployment
 
 jobs:
   deploy:
