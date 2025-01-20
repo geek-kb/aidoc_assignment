@@ -111,14 +111,16 @@ EOF
             "s3:GetBucketVersioning",
             "s3:GetBucketPolicy",
             "s3:GetBucketPublicAccessBlock",
+            "s3:PutEncryptionConfiguration",
             "dynamodb:GetItem",
             "dynamodb:PutItem",
             "dynamodb:DeleteItem",
+            "dynamodb:DescribeTable",
             "kms:Decrypt",
             "kms:DescribeKey",
             "kms:Encrypt",
             "kms:GenerateDataKey",
-            "s3:PutEncryptionConfiguration"
+            "sqs:GetQueueAttributes"
           ],
           Resource = [
             "arn:aws:s3:::${local.assignment_prefix}-terraform-state",
