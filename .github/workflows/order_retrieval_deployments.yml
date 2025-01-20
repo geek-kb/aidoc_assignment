@@ -33,12 +33,9 @@ jobs:
     environment: dev
 
     steps:
+      # === SETUP STAGE ===
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Configure Environment Variables
-        run: |
-          echo "MD5_FILE=$TG_DIR/lambda_code.md5" >> $GITHUB_ENV
 
       - name: Install Terraform & Terragrunt
         run: |
@@ -68,6 +65,7 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
 
+      # === CODE CHANGE DETECTION ===
       - name: Compute MD5 Hash of Lambda Code
         id: compute-md5
         run: |
@@ -89,6 +87,7 @@ jobs:
             echo "CODE_CHANGED=true" >> $GITHUB_ENV
           fi
 
+      # === DOCKER BUILD & PUSH ===
       - name: Login to Amazon ECR
         if: env.CODE_CHANGED == 'true'
         run: |
@@ -113,17 +112,18 @@ jobs:
             --output text)
           echo "IMAGE_URI=${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}@${IMAGE_DIGEST}" >> $GITHUB_ENV
 
-      - name: Update Terragrunt Configuration
-        if: env.CODE_CHANGED == 'true'
-        working-directory: ${{ env.TG_DIR }}
-        run: |
-          sed -i "s|image_uri = .*|image_uri = \"${{ env.IMAGE_URI }}\"|" terragrunt.hcl
-
+      # === INFRASTRUCTURE UPDATE ===
       - name: Configure Git
         if: env.CODE_CHANGED == 'true'
         run: |
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Save New MD5 Hash
+        if: env.CODE_CHANGED == 'true'
+        run: |
+          mkdir -p $(dirname ${{ env.MD5_FILE }})
+          echo "${{ env.NEW_MD5 }}" > ${{ env.MD5_FILE }}
 
       - name: Commit and Push MD5 File
         if: env.CODE_CHANGED == 'true'
@@ -131,6 +131,12 @@ jobs:
           git add ${{ env.MD5_FILE }}
           git commit -m "chore: update lambda code MD5 hash [skip ci]"
           git push
+
+      - name: Update Terragrunt Configuration
+        if: env.CODE_CHANGED == 'true'
+        working-directory: ${{ env.TG_DIR }}
+        run: |
+          sed -i "s|image_uri = .*|image_uri = \"${{ env.IMAGE_URI }}\"|" terragrunt.hcl
 
       - name: Apply Terraform Changes with Terragrunt
         working-directory: ${{ env.TG_DIR }}
