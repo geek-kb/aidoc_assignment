@@ -121,7 +121,6 @@ EOF
             "kms:DescribeKey",
             "kms:Encrypt",
             "kms:GenerateDataKey",
-            "sqs:GetQueueAttributes",
             "ssm:GetParameter",
             "ssm:PutParameter",
             "ssm:DeleteParameter"
@@ -138,6 +137,20 @@ EOF
         }
       ]
     },
+    sqs_access = {
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "sqs:GetQueueAttributes"
+          ],
+          Resource = [
+            "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.environment_name}/lambda/${local.lambda_function_name}/*"
+          ]
+        }
+      ]
+    },
     ssm_and_kms_access = {
       Version = "2012-10-17"
       Statement = [
@@ -150,7 +163,7 @@ EOF
             "ssm:DescribeParameters"
           ],
           Resource = [
-            "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.environment_name}/lambda/${local.lambda_function_name}/*"
+            "arn:aws:sqs:${local.region}:${local.account_id}:order-processor"
           ]
         },
         {
