@@ -77,7 +77,7 @@ inputs = {
   }
 
   lambda_environment = {
-    API_KEY       = yamldecode(sops_decrypt_file(locals.sops_file_path))["${local.ssm_parameter_name}"]
+    API_KEY       = yamldecode(sops_decrypt_file(local.sops_file_path))["${local.ssm_parameter_name}"]
     SQS_QUEUE_URL = "${dependency.sqs_queue.outputs.sqs_queue_url}"
   }
 }
