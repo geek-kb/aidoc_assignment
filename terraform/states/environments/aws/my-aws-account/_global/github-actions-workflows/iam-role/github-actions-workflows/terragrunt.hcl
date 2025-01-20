@@ -53,6 +53,21 @@ inputs = {
 EOF
 
   inline_policies_to_attach = {
+    iam_access = {
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "iam:GetRole",
+            "iam:ListRolePolicies"
+          ],
+          Resource = [
+            "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-*"
+          ]
+        }
+      ]
+    },
     S3Access = {
       Version = "2012-10-17",
       Statement = [
@@ -121,19 +136,14 @@ EOF
             "kms:Decrypt",
             "kms:DescribeKey",
             "kms:Encrypt",
-            "kms:GenerateDataKey",
-            "ssm:GetParameter",
-            "ssm:PutParameter",
-            "ssm:DeleteParameter"
-
+            "kms:GenerateDataKey"
           ],
           Resource = [
             "arn:aws:s3:::${local.assignment_prefix}-terraform-state",
             "arn:aws:s3:::${local.assignment_prefix}-terraform-state/*",
             "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks",
             "arn:aws:kms:${local.region}:${local.account_id}:key/3beb74d1-90ae-4b5a-a205-fd043c751bba",
-            "arn:aws:kms:${local.region}:${local.account_id}:key/00fc7f10-cd91-461e-84d3-0c679e709f53",
-            "arn:aws:ssm:${local.region}:${local.account_id}:parameter/dev-stockholm-1/*"
+            "arn:aws:kms:${local.region}:${local.account_id}:key/00fc7f10-cd91-461e-84d3-0c679e709f53"
           ]
         }
       ]
@@ -144,7 +154,8 @@ EOF
         {
           Effect = "Allow",
           Action = [
-            "sqs:GetQueueAttributes"
+            "sqs:GetQueueAttributes",
+            "sqs:listqueuetags"
           ],
           Resource = [
             "arn:aws:sqs:${local.region}:${local.account_id}:order-processor"
