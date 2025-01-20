@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-ireland-1/lambda/order-retrieval/**"
+      - "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-stockholm-1/lambda/order-retrieval/**"
       - ".github/workflows/order_retrieval_deployments.yml"
   workflow_dispatch:
 
@@ -23,8 +23,8 @@ env:
   ECR_REPO: "order-retrieval"
   LAMBDA_FUNCTION_NAME: "order-retrieval"
   IMAGE_TAG: "latest"
-  TG_DIR: "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-ireland-1/lambda/order-retrieval"
-  MD5_FILE: "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-ireland-1/lambda/order-retrieval/lambda_code.md5"
+  TG_DIR: "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-stockholm-1/lambda/order-retrieval"
+  MD5_FILE: "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-stockholm-1/lambda/order-retrieval/lambda_code.md5"
 
 jobs:
   deploy:
@@ -160,7 +160,7 @@ jobs:
 
       # - name: Configure backend.tf
       #   id: backend
-      #   working-directory: terraform/states/environments/aws/my-aws-account/eu-north-1/dev-ireland-1/lambda/order-retrieval/
+      #   working-directory: terraform/states/environments/aws/my-aws-account/eu-north-1/dev-stockholm-1/lambda/order-retrieval/
       #   run: |
       #     cat <<EOF > backend.tf
       #     remote_state {
