@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../code'))
 def setup_environment(monkeypatch):
     """Configure environment before each test"""
     api_key = "b6f5a2d96a8e4f98b1c3d7a54e9f8b2c"
-    queue_url = "https://sqs.eu-west-1.amazonaws.com/912466608750/order-processor"
+    queue_url = "https://sqs.eu-north-1.amazonaws.com/912466608750/order-processor"
     
     monkeypatch.setenv("API_KEY", api_key)
     monkeypatch.setenv("SQS_QUEUE_URL", queue_url)

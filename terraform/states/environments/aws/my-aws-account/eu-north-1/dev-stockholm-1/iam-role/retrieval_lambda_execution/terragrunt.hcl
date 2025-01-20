@@ -37,27 +37,19 @@ dependency "ecr_order_retrieval" {
   }
 }
 
-dependency "s3_ordering_system" {
-  config_path = "../../s3/${local.bucket_name}"
-
-  mock_outputs = {
-    s3_bucket_arn = "arn:aws:s3:::${local.assignment_prefix}-${local.bucket_name}"
-  }
-}
-
-dependency "dynamodb_orders" {
-  config_path = "../../dynamodb/${local.bucket_directory_and_db_table_name}"
-
-  mock_outputs = {
-    table_arn = "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.bucket_directory_and_db_table_name}"
-  }
-}
-
 dependency "sqs_order_processor" {
   config_path = "../../sqs/${local.sqs_queue_name}"
 
   mock_outputs = {
-    queue_arn = "arn:aws:sqs:${local.region}:${local.account_id}:${local.sqs_queue_name}"
+    sqs_queue_arn = "arn:aws:sqs:${local.region}:${local.account_id}:${local.sqs_queue_name}"
+  }
+}
+
+dependency "ssm" {
+  config_path = "../../ssm/managed"
+
+  mock_outputs = {
+    ssm_parameter_arn = "arn:aws:ssm:${local.region}:${local.account_id}:parameter/${local.environment}/lambda/${local.function_name}/API_KEY"
   }
 }
 
@@ -90,7 +82,7 @@ inputs = {
             "ecr:BatchGetImage",
             "ecr:GetDownloadUrlForLayer"
           ],
-          "Resource" : dependency.ecr_order_retrieval.outputs.repository_arn
+          "Resource" : "${dependency.ecr_order_retrieval.outputs.repository_arn}"
         },
         {
           "Effect" : "Allow",
@@ -111,9 +103,10 @@ inputs = {
           "Action" : [
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
-            "logs:PutLogEvents"
+            "logs:PutLogEvents",
+            "logs:DescribeLogStreams"
           ],
-          "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.assignment_prefix}-${local.parent_folder_name}:*"
+          "Resource" : "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.function_name}:*"
         },
         {
           "Effect" : "Allow",
@@ -126,50 +119,44 @@ inputs = {
       ]
     },
 
-    # S3 Access: (Assumed based on Lambda needing access to an S3 bucket)
-    S3ReadAccess = {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Effect" : "Allow",
-          "Action" : [
-            "s3:GetObject",
-            "s3:ListBucket"
-          ],
-          "Resource" : [
-            "${dependency.s3_ordering_system.outputs.s3_bucket_arn}",
-            "${dependency.s3_ordering_system.outputs.s3_bucket_arn}/*"
-          ]
-        }
-      ]
-    },
-
-    # DynamoDB Access: (If Lambda needs to read from a DynamoDB table)
-    DynamoDBReadAccess = {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Effect" : "Allow",
-          "Action" : [
-            "dynamodb:GetItem",
-            "dynamodb:Query",
-            "dynamodb:Scan"
-          ],
-          "Resource" : dependency.dynamodb_orders.outputs.table_arn
-        }
-      ]
-    },
-
     # SQS Access: (If Lambda needs to send messages to an SQS queue)
-    SQSSendMessage = {
+    SQSSendReceiveMessage = {
       "Version" : "2012-10-17",
       "Statement" : [
         {
           "Effect" : "Allow",
           "Action" : [
-            "sqs:SendMessage"
+            "sqs:SendMessage",
+            "sqs:receivemessage",
+            "sqs:deletemessage"
           ],
-          "Resource" : dependency.sqs_order_processor.outputs.queue_arn
+          "Resource" : "${dependency.sqs_order_processor.outputs.sqs_queue_arn}"
+        }
+      ]
+    },
+
+    KmsDecryptAPI_KEY = {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "kms:Decrypt"
+          ],
+          "Resource" : "arn:aws:kms:${local.region}:${local.account_id}:alias/bootstrap/sops-key"
+        }
+      ]
+    },
+
+    SSMGetParameterAPI_KEY = {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "ssm:GetParameter"
+          ],
+          "Resource" : "${dependency.ssm.outputs.ssm_parameter_arn}"
         }
       ]
     }

@@ -19,18 +19,14 @@ locals {
 }
 
 terraform {
-  source = "${get_repo_root()}/terraform/modules/ecr"
+  source = "${get_repo_root()}/terraform/modules/s3"
 }
 
 inputs = {
-  repository_name       = "${local.parent_folder_name}"
-  image_tag_mutability  = "MUTABLE"
-  scan_on_push          = true
-  enable_kms_encryption = false
-
+  bucket_name   = "${local.parent_folder_name}"
+  force_destroy = true
   tags = {
-    Environment = "dev"
+    Environment = local.environment
     Project     = "ordering-system"
   }
 }
-

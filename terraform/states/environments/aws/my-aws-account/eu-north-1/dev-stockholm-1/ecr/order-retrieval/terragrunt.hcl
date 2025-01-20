@@ -16,40 +16,20 @@ locals {
   parent_folder_path  = split("/", path_relative_to_include())
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
-
-  project_name      = "ordering-system"
-  assignment_prefix = "aidoc-devops2-ex"
 }
 
 terraform {
-  source = "${get_repo_root()}/terraform/modules/dynamodb"
-}
-
-dependency "kms-terraform-state-key" {
-  config_path = "../../kms/terraform-state-key"
-
-  mock_outputs = {
-    key_arn = "(known after apply)"
-  }
+  source = "${get_repo_root()}/terraform/modules/ecr"
 }
 
 inputs = {
-  table_name                     = "${local.assignment_prefix}-${local.parent_folder_name}"
-  billing_mode                   = "PAY_PER_REQUEST"
-  hash_key                       = "LockID"
-  environment                    = local.environment
-  server_side_encryption_enabled = true
-  kms_key_arn                    = dependency.kms-terraform-state-key.outputs.key_arn
-
-  attributes = [
-    {
-      name = "LockID"
-      type = "S"
-    }
-  ]
+  repository_name       = "${local.parent_folder_name}"
+  image_tag_mutability  = "MUTABLE"
+  scan_on_push          = true
+  enable_kms_encryption = false
 
   tags = {
-    Environment_Name = local.environment_name
-    Project          = local.project_name
+    Environment = "dev"
+    Project     = "ordering-system"
   }
 }

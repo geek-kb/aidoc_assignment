@@ -24,28 +24,10 @@ terraform {
   source = "${get_repo_root()}/terraform/modules/iam-role"
 }
 
-dependency "s3_state" {
-  config_path = "../../../_bootstrap/s3/terraform-state"
-
-  mock_outputs = {
-    s3_bucket_arn = "arn:aws:s3:::${local.assignment_prefix}-terraform-state"
-  }
-}
-
-dependency "dynamodb_state_locks" {
-  config_path = "../../../_bootstrap/dynamodb/terraform-state-locks"
-
-  mock_outputs = {
-    table_arn = "arn:aws:dynamodb:${local.region}:${local.account_id}:table/mock-table-id"
-  }
-}
-
 inputs = {
-  role_name = "${local.assignment_prefix}-${local.parent_folder_name}"
-
+  role_name            = "${local.assignment_prefix}-${local.parent_folder_name}"
   max_session_duration = 14400
-
-  assume_role_policy = <<EOF
+  assume_role_policy   = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -53,45 +35,10 @@ inputs = {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-terraform"
+          "arn:aws:iam::${local.account_id}:root"
         ]
       },
       "Action": "sts:AssumeRole"
-    },
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": [
-          "arn:aws:iam::${local.account_id}:user/itaig"
-        ]
-      },
-      "Action": "sts:AssumeRole"
-    },
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": [
-          "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-actions-workflows"
-        ]
-      },
-      "Action": "sts:AssumeRole"
-    },
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "arn:aws:iam::${local.account_id}:oidc-provider/token.actions.githubusercontent.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringLike": {
-          "token.actions.githubusercontent.com:sub": [
-            "repo:geek-kb/aidoc_assignment:*"
-          ]
-        },
-        "StringEquals": {
-          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-        }
-      }
     }
   ]
 }
@@ -110,7 +57,7 @@ EOF
             "dynamodb:DeleteItem",
             "dynamodb:CreateTable"
           ],
-          "Resource" : "${dependency.dynamodb_state_locks.outputs.table_arn}"
+          "Resource" : "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.assignment_prefix}-terraform-state-locks"
         }
       ]
     },
@@ -121,30 +68,28 @@ EOF
           "Effect" : "Allow",
           "Action" : [
             "s3:ListBucket",
-            "s3:GetBucketVersioning",
             "s3:GetObject",
-            "s3:GetBucketAcl",
-            "s3:GetBucketLogging",
-            "s3:CreateBucket",
-            "s3:PutObject",
-            "s3:PutBucketPublicAccessBlock",
-            "s3:PutBucketTagging",
-            "s3:PutBucketPolicy",
-            "s3:PutBucketVersioning",
-            "s3:PutEncryptionConfiguration",
-            "s3:PutBucketAcl",
-            "s3:PutBucketLogging"
+            "s3:PutObject"
           ],
-          "Resource" : "${dependency.s3_state.outputs.s3_bucket_arn}"
-        },
+          "Resource" : [
+            "arn:aws:s3:::${local.assignment_prefix}-terraform-state",
+            "arn:aws:s3:::${local.assignment_prefix}-terraform-state/*"
+          ]
+        }
+      ]
+    },
+    KMS-State = {
+      "Version" : "2012-10-17",
+      "Statement" : [
         {
           "Effect" : "Allow",
           "Action" : [
-            "s3:GetObject",
-            "s3:PutObject",
-            "s3:GetObject"
+            "kms:Encrypt",
+            "kms:Decrypt",
+            "kms:ReEncrypt*",
+            "kms:GenerateDataKey*"
           ],
-          "Resource" : "${dependency.s3_state.outputs.s3_bucket_arn}/*"
+          "Resource" : "arn:aws:kms:${local.region}:${local.account_id}:key/*"
         }
       ]
     }

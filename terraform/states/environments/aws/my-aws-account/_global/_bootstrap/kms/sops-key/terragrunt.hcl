@@ -17,6 +17,7 @@ locals {
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
 
+  project_name      = "ordering-system"
   assignment_prefix = "aidoc-devops2-ex"
 }
 
@@ -35,6 +36,6 @@ inputs = {
 
   tags = {
     Environment = local.environment_name
-    Project     = "ordering-system"
+    Project     = local.project_name
   }
 }

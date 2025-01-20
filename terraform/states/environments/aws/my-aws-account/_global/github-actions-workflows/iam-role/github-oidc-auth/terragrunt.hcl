@@ -27,7 +27,7 @@ terraform {
   source = "${get_repo_root()}/terraform/modules/iam-role"
 }
 
-dependency "github_oidc_provider" {
+dependency "github_oidc" {
   config_path = "../../../_bootstrap/github-oidc/github-oidc-provider"
 
   mock_outputs = {
@@ -46,7 +46,7 @@ inputs = {
       {
         Effect = "Allow",
         Principal = {
-          Federated = "${dependency.github_oidc_provider.outputs.arn}"
+          Federated = "${dependency.github_oidc.outputs.arn}"
         },
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
@@ -62,6 +62,17 @@ inputs = {
       }
     ]
   })
+
+  policy = {
+    assume_roles = {
+      actions = ["sts:AssumeRole"]
+      resources = [
+        "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-actions-workflows",
+        "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-terraform",
+        "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-state-manager"
+      ]
+    }
+  }
 
   tags = {
     Environment = local.environment_name

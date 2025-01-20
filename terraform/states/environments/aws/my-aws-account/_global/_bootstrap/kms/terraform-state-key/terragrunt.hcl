@@ -17,6 +17,7 @@ locals {
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
 
+  project_name      = "ordering-system"
   assignment_prefix = "aidoc-devops2-ex"
 }
 
@@ -24,8 +25,13 @@ terraform {
   source = "${get_repo_root()}/terraform/modules/kms"
 }
 
+dependency "iam-role-admin" {
+  config_path = "../../../admin/iam-role/admin/"
+
+}
+
 inputs = {
-  kms_key_alias = "${local.environment_name}/terraform-state-key"
+  kms_key_alias = "${local.environment_name}/${local.assignment_prefix}-terraform-state-key"
 
   kms_admins = [
     "arn:aws:iam::${local.account_id}:user/itaig"
@@ -35,6 +41,6 @@ inputs = {
 
   tags = {
     Environment = local.environment_name
-    Project     = "ordering-system"
+    Project     = local.project_name
   }
 }

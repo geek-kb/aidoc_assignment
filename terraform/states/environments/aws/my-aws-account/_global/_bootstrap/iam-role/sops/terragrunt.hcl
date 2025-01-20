@@ -25,11 +25,7 @@ terraform {
 }
 
 dependency "kms_sops" {
-  config_path = "../../../_bootstrap/kms/sops-key"
-
-  mock_outputs = {
-    key_arn = "arn:aws:kms:${local.region}:${local.account_id}:key/mock-key-id"
-  }
+  config_path = "../../kms/sops-key"
 }
 
 inputs = {
@@ -45,6 +41,13 @@ inputs = {
         "AWS": "arn:aws:iam::${local.account_id}:role/${local.assignment_prefix}-github-actions-workflows"
       },
       "Action": "sts:AssumeRole"
+    },
+    {
+        "Effect": "Allow",
+        "Principal": {
+            "AWS": "arn:aws:iam::912466608750:user/itaig"
+        },
+        "Action": "sts:AssumeRole"
     }
   ]
 }
@@ -57,20 +60,20 @@ EOF
         {
           "Effect" : "Allow",
           "Action" : [
-            "kms:Encrypt",
             "kms:Decrypt",
+            "kms:DescribeKey",
+            "kms:Encrypt",
             "kms:ReEncrypt*",
-            "kms:GenerateDataKey*",
-            "kms:DescribeKey"
+            "kms:GenerateDataKey*"
           ],
-          "Resource" : "${dependency.kms_sops.outputs.key_arn}"
+          "Resource" : dependency.kms_sops.outputs.key_arn
         }
       ]
     }
   }
 
   tags = {
-    Environment = "${local.environment_name}"
+    Environment = local.environment_name
     Project     = "ordering-system"
   }
 }

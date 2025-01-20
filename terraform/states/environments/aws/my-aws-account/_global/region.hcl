@@ -1,6 +1,6 @@
 locals {
-  region      = "eu-west-1"
-  region_name = "ireland"
+  region      = "eu-north-1"
+  region_name = "stockholm"
 }
 
 inputs = {

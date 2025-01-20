@@ -33,7 +33,7 @@ dependency "kms-terraform-state-key" {
 }
 
 inputs = {
-  bucket_name   = "${local.parent_folder_name}-l9bsjdh"
+  bucket_name   = "${local.assignment_prefix}-${local.parent_folder_name}"
   versioning    = true
   force_destroy = false
   encryption    = true

@@ -1,51 +1,47 @@
-# terragrunt_version_constraint = "= 0.36.1"
 terraform_version_constraint = "= 1.5.5"
 
 locals {
-  account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
-  region_vars  = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  # account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
+  # region_vars  = read_terragrunt_config(find_in_parent_folders("region.hcl"))
 
-  account_name = local.account_vars.locals.account_name
-  account_id   = local.account_vars.locals.account_id
-  region       = local.region_vars.locals.region
+  account_name = "my-aws-account"
+  account_id   = "912466608750"
+  region       = "eu-north-1"
 
   assignment_prefix = "aidoc-devops2-ex"
 
-  common_vars = merge(
-    local.account_vars.locals,
-    local.region_vars.locals,
-    {
-      tags = {
-        "Account"     = local.account_vars.locals.account_name
-        "Provisioner" = "Terraform"
-        "Region"      = local.region_vars.locals.region
-      }
-    }
-  )
+  common_vars = {
+    assignment_prefix = local.assignment_prefix
+    account_id        = local.account_id
+    account_name      = local.account_name
+    region            = local.region
+  }
 }
 
 remote_state {
   backend = "s3"
   generate = {
     path      = "backend.tf"
-    if_exists = "overwrite"
+    if_exists = "overwrite_terragrunt"
   }
   config = {
-    bucket         = "aidoc-devops2-ex-terraform-state-l9bsj3h"
+    bucket         = "${local.assignment_prefix}-terraform-state"
     key            = "${path_relative_to_include()}/terraform.tfstate"
-    region         = "eu-west-1"
+    region         = "${local.region}"
     encrypt        = true
-    kms_key_id     = "arn:aws:kms:eu-west-1:${local.account_id}:key/0544f8e2-f4a6-4b64-8466-fdf76d6e96be"
-    dynamodb_table = "aidoc-devops2-ex-terraform-state-locks"
+    kms_key_id     = "arn:aws:kms:${local.region}:${local.account_id}:alias/bootstrap/${local.assignment_prefix}-terraform-state-key"
+    dynamodb_table = "${local.assignment_prefix}-terraform-state-locks"
 
-    # Prevent accidental state corruption
-    skip_metadata_api_check = true
+    s3_bucket_tags = {
+      Environment = "bootstrap"
+      Project     = "ordering-system"
+    }
   }
 }
 
 generate "provider" {
   path      = "provider.tf"
-  if_exists = "overwrite"
+  if_exists = "overwrite_terragrunt"
   contents  = <<EOF
 terraform {
   required_providers {
@@ -59,11 +55,9 @@ terraform {
     }
   }
 }
-
 provider "aws" {
-  region = "eu-west-1"
+  region = "${local.region}"
 }
-
 provider "sops" {}
 EOF
 }

@@ -17,7 +17,6 @@ locals {
   parent_folder_index = length(local.parent_folder_path) - 1
   parent_folder_name  = element(local.parent_folder_path, local.parent_folder_index)
 
-  repos_list        = ["geek-kb/aidoc_assignment"]
   assignment_prefix = "aidoc-devops2-ex"
 }
 
@@ -25,39 +24,46 @@ terraform {
   source = "${get_repo_root()}/terraform/modules/iam-role"
 }
 
-dependency "github_oidc" {
-  config_path = "../../../_bootstrap/github-oidc/github-oidc-provider"
+dependency "kms_sops" {
+  config_path = "../../kms/sops-key"
 }
 
 inputs = {
   role_name = "${local.assignment_prefix}-${local.parent_folder_name}"
 
-  max_session_duration = 14400
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${local.account_id}:user/itaig"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Federated = dependency.github_oidc.outputs.arn
-        },
-        Action = "sts:AssumeRoleWithWebIdentity",
-        Condition = {
-          "StringLike" = {
-            "token.actions.githubusercontent.com:sub" : [
-              for repo in "${local.repos_list}" : "repo:${repo}:*"
-            ]
-          },
-          "StringEquals" = {
-            "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
-          }
+  kms_policies_to_attach = {
+    SopsKMSAdmin = {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "kms:Decrypt",
+            "kms:DescribeKey",
+            "kms:Encrypt",
+            "kms:ReEncrypt*",
+            "kms:GenerateDataKey*"
+          ],
+          "Resource" : "arn:aws:kms:eu-north-1:912466608750:key/*"
         }
-      }
-    ]
-  })
-
-  managed_policy_arns = ["arn:aws:iam::aws:policy/AdministratorAccess"]
+      ]
+    }
+  }
 
   tags = {
     Environment = local.environment_name
