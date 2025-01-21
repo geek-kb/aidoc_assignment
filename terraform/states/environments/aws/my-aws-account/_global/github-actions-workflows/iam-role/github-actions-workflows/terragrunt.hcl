@@ -76,7 +76,14 @@ EOF
         {
           Effect = "Allow",
           Action = [
-            "lambda:GetFunction"
+            "lambda:GetFunction",
+            "lambda:InvokeFunction",
+            "lambda:ListFunctions",
+            "lambda:ListTags",
+            "lambda:ListVersionsByFunction",
+            "lambda:PublishVersion",
+            "lambda:UpdateFunctionCode",
+            "lambda:UpdateFunctionConfiguration"
           ],
           Resource = [
             "*"
