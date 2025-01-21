@@ -96,6 +96,7 @@ EOF
         {
           Effect = "Allow",
           Action = [
+            "ecr:GetAuthorizationToken",
             "ecr:BatchCheckLayerAvailability",
             "ecr:GetDownloadUrlForLayer",
             "ecr:GetRepositoryPolicy",
