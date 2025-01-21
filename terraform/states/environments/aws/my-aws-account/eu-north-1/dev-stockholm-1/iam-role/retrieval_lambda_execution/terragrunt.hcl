@@ -138,7 +138,8 @@ inputs = {
         {
           "Effect" : "Allow",
           "Action" : [
-            "kms:Decrypt"
+            "kms:Decrypt",
+            "kms:DescribeKey"
           ],
           "Resource" : "arn:aws:kms:${local.region}:${local.account_id}:key/00fc7f10-cd91-461e-84d3-0c679e709f53"
         }
