@@ -26,7 +26,7 @@ locals {
   function_source_code_path = "${local.function_directory}/lambda_source_code"
   function_source_zip_path  = "${local.function_directory}/${local.function_zip_filename}"
 
-  ssm_parameter_name = "/${local.environment_name}/${local.service_name}/${local.function_name}/api-key"
+  ssm_parameter_name = "/${local.environment_name}/${local.service_name}/order-retrieval/api-key"
   sops_file_path     = "../../ssm/managed/params.yaml"
 }
 
