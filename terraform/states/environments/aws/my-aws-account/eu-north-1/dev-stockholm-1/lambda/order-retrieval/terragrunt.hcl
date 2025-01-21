@@ -26,8 +26,7 @@ locals {
   function_source_code_path = "${local.function_directory}/lambda_source_code"
   function_source_zip_path  = "${local.function_directory}/${local.function_zip_filename}"
 
-  ssm_parameter_name = "/${local.environment_name}/${local.service_name}/order-retrieval/api-key"
-  sops_file_path     = "../../ssm/managed/params.yaml"
+  sops_file_path = "../../ssm/managed/params.yaml"
 }
 
 terraform {
@@ -77,7 +76,7 @@ inputs = {
   }
 
   lambda_environment = {
-    API_KEY_PARAMETER_NAME = local.ssm_parameter_name
+    API_KEY_PARAMETER_NAME = "/dev-stockholm-1/lambda/order-retrieval/api_key"
     SQS_QUEUE_URL          = "${dependency.sqs_queue.outputs.sqs_queue_url}"
   }
 }
