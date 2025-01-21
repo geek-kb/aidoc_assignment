@@ -30,7 +30,6 @@ jobs:
   deploy:
     name: Deploy Order Retrieval
     runs-on: ubuntu-latest
-    environment: dev
 
     steps:
       # === SETUP STAGE ===
