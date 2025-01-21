@@ -104,7 +104,7 @@ EOF
             "lambda:UpdateFunctionConfiguration",
             "lambda:GetFunctionUrlConfig",
             "lambda:GetFunctionEventInvokeConfig",
-            "lambda:GetFunctionConcurrency",
+            "lambda:GetFunctionConcurrency"
           ],
           Resource = [
             "*"
