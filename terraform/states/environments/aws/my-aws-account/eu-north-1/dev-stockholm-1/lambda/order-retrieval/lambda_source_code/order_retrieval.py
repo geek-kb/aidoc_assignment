@@ -33,15 +33,18 @@ def process_order() -> tuple[Response, int]:
             Name=API_KEY_PARAMETER_NAME,
             WithDecryption=True
         )
-        stored_api_key = api_key_param['Parameter']['Value']
-        request_api_key = request.headers.get('x-api-key')
+        stored_api_key = api_key_param['Parameter']['Value'].strip()
+        request_api_key = request.headers.get('x-api-key', '').strip()
         
         # Debug logging with masked keys
-        logger.debug(f"API Key comparison - Stored: {stored_api_key[:4]}... Request: {request_api_key[:4] if request_api_key else 'None'}")
+        logger.debug(f"API Key lengths - Stored: {len(stored_api_key)}, Request: {len(request_api_key)}")
+        logger.debug(f"API Keys match: {stored_api_key == request_api_key}")
         
         if not request_api_key or request_api_key != stored_api_key:
-            logger.warning("Authentication failed - Invalid API key")
+            logger.warning(f"Authentication failed - Invalid API key or missing header")
             return jsonify({"error": "Unauthorized"}), 401
+
+        # Process SQS message
 
         # Process SQS message
         logger.info("Retrieving message from SQS...")
