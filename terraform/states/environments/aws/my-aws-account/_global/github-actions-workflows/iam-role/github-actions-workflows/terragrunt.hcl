@@ -96,7 +96,6 @@ EOF
         {
           Effect = "Allow",
           Action = [
-            "ecr:GetAuthorizationToken",
             "ecr:BatchCheckLayerAvailability",
             "ecr:GetDownloadUrlForLayer",
             "ecr:GetRepositoryPolicy",
@@ -113,6 +112,15 @@ EOF
           ],
           Resource = [
             "arn:aws:ecr:${local.region}:${local.account_id}:repository/order-retrieval"
+          ]
+        },
+        {
+          Effect = "Allow",
+          Action = [
+            "ecr:GetAuthorizationToken"
+          ],
+          Resource = [
+            "*"
           ]
         }
       ]
