@@ -1,5 +1,5 @@
 /dev-stockholm-1/lambda/order-retrieval/api_key: ENC[AES256_GCM,data:pu39MdG+rhdF6X2ndWualP+BcVaFbmvAfm4tL+Jr740=,iv:dP58Ru0JRviZblPPkDA+ycxQHNALQUqHTDedBG5SWxM=,tag:PLeVjvrjSZD6g1dNhWwGeQ==,type:str]
-/dev-stockholm-1/sqs/order-processor/queue_url_unencrypted: https://sqs.eu-west-1.amazonaws.com/912466608750/order-processor
+/dev-stockholm-1/sqs/order-processor/queue_url_unencrypted: https://sqs.eu-north-1.amazonaws.com/912466608750/order-processor
 /dev-stockholm-1/kms/sops_alias_unencrypted: /bootstrap/kms/sops-key
 sops:
     kms:
@@ -12,8 +12,8 @@ sops:
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2025-01-20T17:13:15Z"
-    mac: ENC[AES256_GCM,data:cPtUCjT+0Wlhf2nHUSnBwc38oufNScDOW19Q3s6cF2XCbufDOeogQkIrFJIci0HzOXLk+NW34iUUmh88sydSCQrnhGVFUZ38m+P3Epn0jNqm+Kn39hn9tcimSykjePUbPOd+q14dNdYqsbdQvL4JopCz923xWzEeBP7uXUMV9QM=,iv:UCLXCD4z5WEhwPWfqe4odJp8V7oau8+f2SGQk8/ZDnA=,tag:t+9fnPRKmUpRt4vMot793Q==,type:str]
+    lastmodified: "2025-01-21T00:08:04Z"
+    mac: ENC[AES256_GCM,data:jqRV/Jixu5/Vy4sXNX6yo29+1OShY+THKUGWYz50Eo522koiNoKVLKehdQaK09hNVXvnJr4lh0xctWjEWR+CfmxLS5+5BTY1CKkx+QFXUawfeWZx3aWVqvY1V8k3pLosE+3QKXF32KDAhnmItKIGNvdxkFyCeFyMzTyIwtgKG94=,iv:HGVdTLkipA8pnuLcx4GEQR23e3yctiRmpA7VFVznlD0=,tag:Afaj6Y8AN4mSWv3lJI3Rzg==,type:str]
     pgp: []
     unencrypted_suffix: _unencrypted
     version: 3.9.3
