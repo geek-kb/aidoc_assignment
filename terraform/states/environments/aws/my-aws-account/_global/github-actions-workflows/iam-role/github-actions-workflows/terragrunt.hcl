@@ -83,7 +83,10 @@ EOF
             "lambda:ListVersionsByFunction",
             "lambda:PublishVersion",
             "lambda:UpdateFunctionCode",
-            "lambda:UpdateFunctionConfiguration"
+            "lambda:UpdateFunctionConfiguration",
+            "GetFunctionUrlConfig",
+            "GetFunctionEventInvokeConfig",
+            "GetFunctionConcurrency"
           ],
           Resource = [
             "*"
