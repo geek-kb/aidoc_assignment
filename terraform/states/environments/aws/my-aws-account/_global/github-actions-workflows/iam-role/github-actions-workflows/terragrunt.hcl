@@ -91,7 +91,10 @@ EOF
         {
           "Effect" = "Allow",
           "Action" = [
-            "logs:DescribeLogGroups"
+            "logs:DescribeLogGroups",
+            "logs:ListTagsForResource",
+            "logs:PutRetentionPolicy",
+            "logs:DescribeResourcePolicies"
           ],
           "Resource" : "*"
         }
