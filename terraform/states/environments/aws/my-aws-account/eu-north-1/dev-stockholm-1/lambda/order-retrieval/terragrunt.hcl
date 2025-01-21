@@ -71,7 +71,7 @@ inputs = {
     allow_credentials = true
     allow_origins     = ["*"]
     allow_methods     = ["POST"]
-    allow_headers     = ["*"]
+    allow_headers     = ["x-api-key", "content-type"]
     expose_headers    = ["*"]
     max_age           = 86400
   }

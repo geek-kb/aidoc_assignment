@@ -5,7 +5,7 @@ resource "aws_lambda_function" "this" {
   runtime          = var.containerization ? null : var.runtime
   timeout          = var.timeout
   memory_size      = var.memory_size
-  package_type     = var.containerization ? "Image" : "Zip"  
+  package_type     = var.containerization ? "Image" : "Zip"
   image_uri        = var.containerization ? var.image_uri : null
   s3_bucket        = !var.containerization ? var.s3_bucket_name : null
   s3_key           = !var.containerization ? aws_s3_object.source-code-object[0].key : null
@@ -22,16 +22,16 @@ resource "aws_lambda_function" "this" {
 }
 
 resource "aws_lambda_function_url" "this" {
-  count          = var.enable_function_url ? 1 : 0
-  function_name  = aws_lambda_function.this.function_name
+  count              = var.enable_function_url ? 1 : 0
+  function_name      = aws_lambda_function.this.function_name
   authorization_type = "NONE"
 
   dynamic "cors" {
     for_each = var.enable_function_url && length(var.function_url_cors) > 0 ? [1] : []
     content {
-      allow_origins = var.function_url_cors.allow_origins
-      allow_methods = var.function_url_cors.allow_methods
-      allow_headers = var.function_url_cors.allow_headers
+      allow_origins  = var.function_url_cors.allow_origins
+      allow_methods  = var.function_url_cors.allow_methods
+      allow_headers  = var.function_url_cors.allow_headers
       expose_headers = var.function_url_cors.expose_headers
       max_age        = var.function_url_cors.max_age
     }
@@ -59,22 +59,23 @@ data "archive_file" "source-code-zip" {
 }
 
 resource "aws_s3_object" "source-code-object" {
-  count  = var.containerization ? 0 : 1
-  bucket = var.s3_bucket_name
-  key    = var.function_zip_filename
-  source = data.archive_file.source-code-zip[0].output_path
+  count       = var.containerization ? 0 : 1
+  bucket      = var.s3_bucket_name
+  key         = var.function_zip_filename
+  source      = data.archive_file.source-code-zip[0].output_path
   source_hash = data.archive_file.source-code-zip[0].output_base64sha256
   etag        = filemd5("${var.function_source_zip_path}")
 }
 
 # S3 Trigger Permissions
 resource "aws_lambda_permission" "s3_trigger" {
-  count         = var.enable_s3_trigger ? 1 : 0
-  statement_id  = "AllowS3Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.this.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = "arn:aws:s3:::${var.s3_bucket_name}"
+  count                  = var.enable_s3_trigger ? 1 : 0
+  statement_id           = "AllowS3Invoke"
+  action                 = "lambda:InvokeFunction"
+  function_name          = aws_lambda_function.this.function_name
+  principal              = "s3.amazonaws.com"
+  source_arn             = "arn:aws:s3:::${var.s3_bucket_name}"
+  function_url_auth_type = "NONE"
 }
 
 resource "aws_s3_bucket_notification" "s3_trigger" {
