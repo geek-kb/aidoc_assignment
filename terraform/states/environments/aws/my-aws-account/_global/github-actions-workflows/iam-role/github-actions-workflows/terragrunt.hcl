@@ -61,7 +61,22 @@ EOF
           Action = [
             "iam:GetRole",
             "iam:ListRolePolicies",
-            "iam:GetRolePolicy"
+            "iam:GetRolePolicy",
+            "iam:ListAttachedRolePolicies"
+          ],
+          Resource = [
+            "*"
+          ]
+        }
+      ]
+    },
+    Lambda = {
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "lambda:GetFunction"
           ],
           Resource = [
             "*"
