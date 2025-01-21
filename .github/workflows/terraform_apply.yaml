@@ -26,7 +26,18 @@ jobs:
 
       - id: set-matrix
         run: |
-          CHANGED_DIRS=$(git diff --name-only HEAD^ HEAD | grep '^terraform/' | xargs -I {} dirname {} | sort -u | jq -R -s -c 'split("\n")[:-1]')
+          CHANGED_DIRS=$(git diff --name-only HEAD^ HEAD | \
+            grep '^terraform/' | \
+            while read -r file; do
+              dir=$(dirname "$file")
+              while [[ "$dir" != "." && "$dir" != "/" ]]; do
+                if [[ -f "$dir/terragrunt.hcl" ]]; then
+                  echo "$dir"
+                  break
+                fi
+                dir=$(dirname "$dir")
+              done
+            done | sort -u | jq -R -s -c 'split("\n")[:-1]')
           echo "matrix=${CHANGED_DIRS}" >> $GITHUB_OUTPUT
 
   apply:
