@@ -140,7 +140,7 @@ inputs = {
           "Action" : [
             "kms:Decrypt"
           ],
-          "Resource" : "arn:aws:kms:${local.region}:${local.account_id}:alias/bootstrap/sops-key"
+          "Resource" : "arn:aws:kms:${local.region}:${local.account_id}:key/00fc7f10-cd91-461e-84d3-0c679e709f53"
         }
       ]
     },
