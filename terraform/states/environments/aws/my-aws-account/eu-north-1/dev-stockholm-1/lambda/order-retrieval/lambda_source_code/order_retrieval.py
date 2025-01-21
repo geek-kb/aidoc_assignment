@@ -22,14 +22,15 @@ sqs = boto3.client('sqs')
 ssm = boto3.client('ssm')
 
 API_KEY_PARAMETER_NAME = os.getenv("API_KEY_PARAMETER_NAME")
-SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL")
+SQS_QUEUE_PARAMETER_NAME = os.getenv("SQS_QUEUE_PARAMETER_NAME")
 
-logger.info(f"API_KEY_PARAMETER_NAME configured: {API_KEY_PARAMETER_NAME}")
-logger.info(f"SQS_QUEUE_URL configured: {SQS_QUEUE_URL}")
+logger.info(f"Getting SSM parameter api_key: {API_KEY_PARAMETER_NAME}")
+logger.info(f"Getting SSM parameter sqs_queue: {SQS_QUEUE_PARAMETER_NAME}")
 
 @app.route('/process', methods=['POST'])
 def process_order():
-    API_KEY = ssm.get_parameter(Name=API_KEY_PARAMETER_NAME, WithDecryption=True)
+    API_KEY = ssm.get_parameter(Name=f"{API_KEY_PARAMETER_NAME}", WithDecryption=True)
+    SQS_QUEUE_URL = ssm.get_parameter(Name=f"{SQS_QUEUE_PARAMETER_NAME}", WithDecryption=True)
     api_key = request.headers.get('x-api-key')
     logger.debug(f"Request received with API key: {api_key}")
 
