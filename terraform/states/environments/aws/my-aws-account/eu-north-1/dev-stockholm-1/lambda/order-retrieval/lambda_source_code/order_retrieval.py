@@ -29,8 +29,17 @@ logger.info(f"Getting SSM parameter sqs_queue: {SQS_QUEUE_PARAMETER_NAME}")
 
 @app.route('/process', methods=['POST'])
 def process_order():
-    API_KEY = ssm.get_parameter(Name=f"{API_KEY_PARAMETER_NAME}", WithDecryption=True)
-    SQS_QUEUE_URL = ssm.get_parameter(Name=f"{SQS_QUEUE_PARAMETER_NAME}", WithDecryption=True)
+    try:
+        api_key_param = ssm.get_parameter(
+            Name=API_KEY_PARAMETER_NAME,
+            WithDecryption=True
+        )
+        API_KEY = api_key_param['Parameter']['Value']
+        SQS_QUEUE_URL = os.getenv('SQS_QUEUE_URL')  # Get directly from env var
+    except Exception as e:
+        logger.error(f"Error getting SSM parameters: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
     api_key = request.headers.get('x-api-key')
     logger.debug(f"Request received with API key: {api_key}")
 

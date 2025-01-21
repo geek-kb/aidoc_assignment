@@ -76,27 +76,11 @@ EOF
         {
           Effect = "Allow",
           Action = [
-            "logs:DescribeLogGroups",
-            "logs:DescribeLogStreams",
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents",
-            "logs:deleteLogGroup"
+            "logs:*"
           ],
           Resource = [
-            "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.lambda_function_name}:*",
-            "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.lambda_function_name}"
+            "arn:aws:logs:${local.region}:${local.account_id}:*",
           ]
-        },
-        {
-          "Effect" = "Allow",
-          "Action" = [
-            "logs:DescribeLogGroups",
-            "logs:ListTagsForResource",
-            "logs:PutRetentionPolicy",
-            "logs:DescribeResourcePolicies"
-          ],
-          "Resource" : "*"
         }
       ]
     },
