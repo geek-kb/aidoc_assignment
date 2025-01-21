@@ -80,10 +80,12 @@ EOF
             "logs:DescribeLogStreams",
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
-            "logs:PutLogEvents"
+            "logs:PutLogEvents",
+            "logs:deleteLogGroup"
           ],
           Resource = [
-            "*"
+            "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.lambda_function_name}:*",
+            "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.lambda_function_name}"
           ]
         }
       ]
@@ -103,11 +105,14 @@ EOF
             "lambda:UpdateFunctionCode",
             "lambda:UpdateFunctionConfiguration",
             "lambda:GetFunctionUrlConfig",
+            "lambda:CreateFunctionUrlConfig",
+            "lambda:DeleteFunctionUrlConfig",
+            "lambda:UpdateFunctionUrlConfig",
             "lambda:GetFunctionEventInvokeConfig",
             "lambda:GetFunctionConcurrency"
           ],
           Resource = [
-            "*"
+            "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.lambda_function_name}"
           ]
         }
       ]
