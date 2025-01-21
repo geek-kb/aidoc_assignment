@@ -7,6 +7,7 @@ from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 
+
 # Configure logging
 default_log_args = {
     "level": logging.DEBUG if os.environ.get("DEBUG", False) else logging.INFO,
