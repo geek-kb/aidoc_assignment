@@ -111,15 +111,6 @@ EOF
             "ecr:GetLifecyclePolicy"
           ],
           Resource = [
-            "arn:aws:ecr:${local.region}:${local.account_id}:repository/order-retrieval"
-          ]
-        },
-        {
-          Effect = "Allow",
-          Action = [
-            "ecr:GetAuthorizationToken"
-          ],
-          Resource = [
             "*"
           ]
         }
