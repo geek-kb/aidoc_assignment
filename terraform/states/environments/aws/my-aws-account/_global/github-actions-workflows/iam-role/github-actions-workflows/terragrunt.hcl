@@ -70,6 +70,24 @@ EOF
         }
       ]
     },
+    CloudWatchLogs = {
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "logs:DescribeLogGroups",
+            "logs:DescribeLogStreams",
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          Resource = [
+            "*"
+          ]
+        }
+      ]
+    },
     Lambda = {
       Version = "2012-10-17",
       Statement = [
@@ -84,9 +102,9 @@ EOF
             "lambda:PublishVersion",
             "lambda:UpdateFunctionCode",
             "lambda:UpdateFunctionConfiguration",
-            "GetFunctionUrlConfig",
-            "GetFunctionEventInvokeConfig",
-            "GetFunctionConcurrency"
+            "lambda:GetFunctionUrlConfig",
+            "lambda:GetFunctionEventInvokeConfig",
+            "lambda:GetFunctionConcurrency",
           ],
           Resource = [
             "*"
