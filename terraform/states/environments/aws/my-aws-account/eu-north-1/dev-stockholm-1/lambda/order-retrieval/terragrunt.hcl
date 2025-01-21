@@ -68,11 +68,12 @@ inputs = {
 
   enable_function_url = true
   function_url_cors = {
-    allow_origins  = ["*"]
-    allow_methods  = ["POST"]
-    allow_headers  = ["Authorization"]
-    expose_headers = []
-    max_age        = 3600
+    allow_credentials = true
+    allow_origins     = ["*"]
+    allow_methods     = ["POST"]
+    allow_headers     = ["*"]
+    expose_headers    = ["*"]
+    max_age           = 86400
   }
 
   lambda_environment = {
