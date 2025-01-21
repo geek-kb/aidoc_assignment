@@ -1,11 +1,11 @@
-name: Deploy Order Retrieval Lambda
+name: Lambda Deployment
 
 on:
   push:
     branches:
       - main
     paths:
-      - "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-stockholm-1/lambda/order-retrieval/**"
+      - "terraform/states/environments/aws/my-aws-account/eu-north-1/dev-stockholm-1/lambda/**"
       - ".github/workflows/order_retrieval_deployments.yml"
   workflow_dispatch:
 
