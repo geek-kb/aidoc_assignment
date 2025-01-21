@@ -87,6 +87,13 @@ EOF
             "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.lambda_function_name}:*",
             "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.lambda_function_name}"
           ]
+        },
+        {
+          "Effect" = "Allow",
+          "Action" = [
+            "logs:DescribeLogGroups"
+          ],
+          "Resource" : "*"
         }
       ]
     },
