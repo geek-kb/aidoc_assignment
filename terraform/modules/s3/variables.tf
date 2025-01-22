@@ -48,9 +48,9 @@ variable "versioning" {
 variable "lifecycle_rules" {
   description = "A list of lifecycle rules for the bucket"
   type = list(object({
-    id      = string
-    status  = string
-    prefix  = optional(string, "")
+    id     = string
+    status = string
+    prefix = optional(string, "")
     expiration = optional(object({
       days                         = optional(number)
       expired_object_delete_marker = optional(bool)
@@ -72,5 +72,5 @@ variable "tags" {
 variable "account_id" {
   description = "The AWS account ID"
   type        = string
-  default = ""
+  default     = ""
 }

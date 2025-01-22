@@ -1,10 +1,10 @@
 resource "aws_iam_role" "this" {
   count = var.create_iam_role ? 1 : 0
 
-  name               = var.role_name
-  assume_role_policy = var.assume_role_policy
+  name                 = var.role_name
+  assume_role_policy   = var.assume_role_policy
   max_session_duration = var.max_session_duration
-  tags               = var.tags
+  tags                 = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "managed" {
@@ -28,4 +28,3 @@ resource "aws_iam_role_policy" "kms_access" {
   role   = aws_iam_role.this[0].name
   policy = jsonencode(each.value)
 }
-
