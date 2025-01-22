@@ -44,16 +44,17 @@ python -m pytest tests/ -v
     └── states
 ```
 
-Under `terraform` directory, you will find two directories;
+Under the **terraform/** directory, two primary subdirectories exist:
 
-1. `modules` - as its name suggests - all the Terraform modules that I wrote are there.
-   ** to myself - add readme.md files there**
+1. **modules/** - Contains all reusable Terraform modules, each dedicated to a specific AWS resource.
+   _Note: README.md files should be added for each module._
+2. **states/** - Represents the actual infrastructure environments, organized by AWS account, region, and deployment stage.
 
-2. `states` directory - this is where you will find the structure of the environment.
+## Infrastructure Design Rationale
 
-When I started working on the project, I thought I'll do exactly what I was instructed to do, but as I started, I realized that I never had the opportunity to
-design / architect a whole infrastructure from scratch and I figured that now it would be a good opportunity to do so.
-I thought deeply about the the goals I'd like to achieve at the end of the work and started working on it, and even though it might look a little complex at first sight, I think I came up with an infrastructure that is ready for a company's growth and future.
+Initially, my goal was to strictly follow the assignment instructions. However, I soon realized this was an opportunity to design a scalable and maintainable infrastructure **from scratch**—something I hadn't done before. This led me to carefully consider long-term **growth, security, and flexibility** while structuring the infrastructure.
+
+The result is a **multi-account, multi-region** architecture that is **modular, secure, and scalable**.
 
 ```
 └── states
@@ -288,6 +289,8 @@ terragrunt run-all plan
 cd terraform/states/environments/aws/my-aws-account/_global/_bootstrap
 terragrunt run-all init
 ```
+
+This is the parent `terragrunt.hcl` that should be placed under `terraform/states/environments/aws`:
 
 ```hcl
 terraform_version_constraint = "= 1.5.5"
