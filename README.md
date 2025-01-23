@@ -47,7 +47,6 @@ python -m pytest tests/ -v
 Under the **terraform/** directory, two primary subdirectories exist:
 
 1. **modules/** - Contains all reusable Terraform modules, each dedicated to a specific AWS resource.
-   _Note: README.md files should be added for each module._
 2. **states/** - Represents the actual infrastructure environments, organized by AWS account, region, and deployment stage.
 
 ## Infrastructure Design Rationale
@@ -590,11 +589,13 @@ jobs:
    ```
 
 5. **SOPS Role**
+
    ```mermaid
    graph TD
        A[Developer/CI] -->|Assume| B[SOPS Role]
        B -->|Decrypt| C[Secrets]
    ```
+
    ```bash
    # Local development
    export AWS_PROFILE=sops
