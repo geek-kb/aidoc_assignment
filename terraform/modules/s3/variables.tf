@@ -68,9 +68,3 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
-
-variable "account_id" {
-  description = "The AWS account ID"
-  type        = string
-  default     = ""
-}

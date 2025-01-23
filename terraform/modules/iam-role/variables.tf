@@ -44,15 +44,3 @@ variable "kms_policies_to_attach" {
   type        = map(any)
   default     = {}
 }
-
-variable "region" {
-  description = "The AWS region where resources will be created"
-  type        = string
-  default     = "eu-north-1"
-}
-
-variable "account_id" {
-  description = "The AWS account ID where resources will be created"
-  type        = string
-  default     = ""
-}

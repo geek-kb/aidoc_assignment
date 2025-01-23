@@ -38,9 +38,3 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
-
-variable "environment" {
-  description = "The environment in which the KMS key is being created"
-  type        = string
-  default     = ""
-}

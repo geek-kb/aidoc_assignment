@@ -35,11 +35,11 @@ def process_order() -> tuple[Response, int]:
         )
         stored_api_key = api_key_param['Parameter']['Value'].strip()
         request_api_key = request.headers.get('x-api-key', '').strip()
-        
+
         # Debug logging with masked keys
         logger.debug(f"API Key lengths - Stored: {len(stored_api_key)}, Request: {len(request_api_key)}")
         logger.debug(f"API Keys match: {stored_api_key == request_api_key}")
-        
+
         if not request_api_key or request_api_key != stored_api_key:
             logger.warning(f"Authentication failed - Invalid API key or missing header")
             return jsonify({"error": "Unauthorized"}), 401
@@ -59,7 +59,7 @@ def process_order() -> tuple[Response, int]:
 
         message = response['Messages'][0]
         order = json.loads(message['Body'])
-        
+
         # Delete message after processing
         sqs.delete_message(
             QueueUrl=SQS_QUEUE_URL,

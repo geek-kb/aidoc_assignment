@@ -123,15 +123,15 @@ jobs:
         run: |
           git fetch origin main
           git pull --rebase origin main
-          
+
           mkdir -p $(dirname ${{ env.MD5_FILE }})
           echo "${{ env.NEW_MD5 }}" > ${{ env.MD5_FILE }}
-          
+
           if git diff --quiet ${{ env.MD5_FILE }}; then
             echo "No changes to MD5 hash, continuing workflow"
             exit 0
           fi
-          
+
           git add ${{ env.MD5_FILE }}
           if ! git diff --cached --quiet; then
             git commit -m "chore: update lambda code MD5 hash [skip ci]"

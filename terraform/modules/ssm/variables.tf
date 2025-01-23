@@ -1,6 +1,7 @@
 variable "ssm_params" {
-  type    = map(string)
-  default = {}
+  description = "Map of SSM parameters to create with their configurations"
+  type        = map(string)
+  default     = {}
 }
 
 variable "kms_key_id" {

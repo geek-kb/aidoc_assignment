@@ -85,9 +85,3 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
-
-variable "environment" {
-  description = "The environment in which the DynamoDB table is being created"
-  type        = string
-  default     = ""
-}

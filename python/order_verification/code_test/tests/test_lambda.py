@@ -21,7 +21,7 @@ def mock_dynamodb():
         table_mock = MagicMock()
         table_mock.query.return_value = {"Count": 1}
         mock.Table.return_value = table_mock
-        
+
         # Store mock for assertions in tests
         mock.table_mock = table_mock
         yield mock
@@ -54,11 +54,11 @@ def test_validate_order(mock_dynamodb, capsys):
         "items": [{"productId": "123", "productName": "Test Product"}]
     }
     print(f"Input order data: {json.dumps(order_data, indent=2)}")
-    
+
     # Execute validation
     result = validate_order(order_data)
     print(f"Validation result: {result}")
-    
+
     # Verify results
     assert result is True
     mock_dynamodb.Table.assert_called_once_with(os.environ["DYNAMODB_TABLE_NAME"])
@@ -80,10 +80,10 @@ def test_send_to_sqs(mock_sqs, capsys):
         "items": [{"productId": "123"}]
     }
     print(f"Input order data: {json.dumps(order_data, indent=2)}")
-    
+
     # Send message to SQS
     send_to_sqs(order_data)
-    
+
     # Verify correct SQS parameters
     mock_sqs.send_message.assert_called_once_with(
         QueueUrl=os.environ["SQS_QUEUE_URL"],

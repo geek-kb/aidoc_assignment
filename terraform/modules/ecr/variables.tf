@@ -54,15 +54,3 @@ variable "tags" {
   description = "Tags to apply to the ECR repository."
   default     = {}
 }
-
-variable "region" {
-  description = "The AWS region"
-  type        = string
-  default     = "eu-north-1"
-}
-
-variable "account_id" {
-  description = "The AWS account ID"
-  type        = string
-  default     = ""
-}
