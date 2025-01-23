@@ -42,10 +42,10 @@ generate "provider" {
   contents  = <<EOF
 terraform {
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.84.0, < 6.0.0"
-    }
+#    aws = {
+#      source  = "hashicorp/aws"
+#      version = ">= 5.84.0, < 6.0.0"
+#    }
     sops = {
       source  = "carlpett/sops"
       version = ">= 0.7.2"
