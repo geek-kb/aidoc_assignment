@@ -1,10 +1,15 @@
----
 repos:
+  - repo: local
+    hooks:
+      - id: prettier
+        name: Prettier Formatter
+        entry: bash -c 'git diff --name-only --cached --diff-filter=ACM | grep -E "\.(json|ya?ml|md|js|ts)$" | xargs prettier --write'
+        language: system
+        pass_filenames: false
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: pretty-format-json
-        args: [--autofix, --indent=4, --no-ensure-ascii, --no-sort-keys]
       - id: check-json
       - id: end-of-file-fixer
       - id: trailing-whitespace
@@ -13,15 +18,14 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
       - id: detect-private-key
-
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.97.0
+    rev: v1.97.3
     hooks:
       - id: terraform_docs
         args:
-          - --hook-config=--path-to-file=README.md # Path to output file
-          - --hook-config=--add-to-existing-file=true # Append to existing docs
-          - --hook-config=--create-file-if-not-exist=true # Create README if missing
+          - --hook-config=--path-to-file=README.md # path to output file
+          - --hook-config=--add-to-existing-file=true # append to existing docs
+          - --hook-config=--create-file-if-not-exist=true # create README if missing
       - id: terraform_fmt
       - id: terraform_tflint
         args:
