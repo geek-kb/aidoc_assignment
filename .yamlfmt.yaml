@@ -6,3 +6,11 @@ formatter:
   type: basic
   indent: 2
   line_ending: lf
+  scan_folded_as_literal: true
+  allow_merge: false
+  indentless_arrays: false
+  preserve_indent: true
+  include_document_end: false
+  padding_level: 0
+  max_line_length_comment: 100
+  max_line_length_mapping_key: 100

@@ -13,3 +13,15 @@ rules:
   indentation:
     spaces: 2
     level: warning
+  trailing-spaces: disable
+  comments:
+    min-spaces-from-content: 1
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+  colons:
+    max-spaces-before: 0
+    min-spaces-after: 1
