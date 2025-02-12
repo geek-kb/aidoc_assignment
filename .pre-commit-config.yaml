@@ -1,4 +1,12 @@
 repos:
+  - repo: local
+    hooks:
+      - id: prettier
+        name: Prettier YAML Formatter
+        entry: prettier --write
+        language: system
+        types: [file]
+        files: \.ya?ml$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -13,7 +21,7 @@ repos:
       - id: check-added-large-files
       - id: detect-private-key
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.97.0
+    rev: v1.97.3
     hooks:
       - id: terraform_docs
         args:
