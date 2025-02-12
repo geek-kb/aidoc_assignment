@@ -6,4 +6,3 @@ formatter:
   type: basic
   indent: 2
   line_ending: lf
-  flow_style: block
