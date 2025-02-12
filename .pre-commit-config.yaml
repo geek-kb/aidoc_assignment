@@ -1,5 +1,7 @@
 ---
 fail_fast: true
+default_install_hook_types: [pre-commit]
+default_stages: [pre-commit]
 repos:
   - repo: local
     hooks:
@@ -10,13 +12,11 @@ repos:
           -r git add'
         pass_filenames: false
         stages: [pre-commit]
-        require_serial: true
   - repo: https://github.com/google/yamlfmt
     rev: v0.16.0
     hooks:
       - id: yamlfmt
         args: ["-conf=.yamlfmt.yaml"]
-        stages: [pre-commit]
         require_serial: true
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
