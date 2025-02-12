@@ -4,3 +4,5 @@ formatter:
   max_line_length: 100
   retain_line_breaks: true
   type: basic
+  indent: 2
+  line_ending: lf
