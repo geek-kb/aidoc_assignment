@@ -1,0 +1,10 @@
+name: DevOps Engineer
+skills:
+  - Terraform
+  - Kubernetes
+  - AWS
+experience: 5
+certifications:
+  - AWS Certified Solutions Architect
+    - CKA
+active: yes,
