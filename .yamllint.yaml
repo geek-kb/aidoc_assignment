@@ -1,0 +1,14 @@
+---
+extends: default
+
+rules:
+  document-start:
+    present: true
+    level: error
+  line-length:
+    max: 100
+    level: error
+  empty-lines:
+    max: 1
+    max-start: 0
+    max-end: 0
