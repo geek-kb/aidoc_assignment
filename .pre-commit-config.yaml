@@ -2,11 +2,11 @@ repos:
   - repo: local
     hooks:
       - id: prettier
-        name: Prettier YAML Formatter
-        entry: prettier --write
+        name: Prettier Formatter
+        entry: bash -c 'git diff --name-only --cached --diff-filter=ACM | grep -E "\.(json|ya?ml|md|js|ts)$" | xargs prettier --write'
         language: system
-        types: [file]
-        files: \.ya?ml$
+        pass_filenames: false
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
