@@ -3,8 +3,4 @@ formatter:
   include_document_start: true
   max_line_length: 100
   retain_line_breaks: true
-  drop_merge_tag: false
-  scan_folded_as_literal: true
-  indentless_arrays: false
-  pad_line_comments: 0
-  pad_objects: false
+  type: basic
