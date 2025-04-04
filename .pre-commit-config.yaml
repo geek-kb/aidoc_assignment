@@ -8,7 +8,8 @@ repos:
       - id: stage-yaml-fixes
         name: Stage YAML Fixes
         language: system
-        entry: bash -c 'git diff --name-only --cached --diff-filter=ACM | grep -E "\.(ya?ml)$" | xargs
+        entry:
+          bash -c 'git diff --name-only --cached --diff-filter=ACM | grep -E "\.(ya?ml)$" | xargs
           -r git add'
         pass_filenames: false
         stages: [pre-commit]
